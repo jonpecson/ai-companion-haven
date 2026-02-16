@@ -415,6 +415,13 @@ moods (id, user_id, mood_type, created_at)
    - `ALLOWED_ORIGINS`
 4. Deploy automatically on push to main
 
+## Note on Repository Visibility
+
+This repository is **public** because Render's free tier does not support automatic deployments from private GitHub repositories. If you fork this project and want to use Render for backend hosting, you'll need to either:
+- Keep the repository public
+- Upgrade to Render's paid plan for private repo support
+- Use an alternative hosting provider (Railway, Fly.io, etc.)
+
 ## License
 
 MIT License
