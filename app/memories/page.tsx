@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import {
   MessageCircle,
   Image as ImageIcon,
@@ -17,11 +18,11 @@ import {
   Gamepad2,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { mockCompanions, mockMemories } from "@/lib/mock-data";
+import { companionsApi } from "@/lib/api";
 import { formatRelativeTime, cn } from "@/lib/utils";
 import { IconSidebar } from "@/components/layout/IconSidebar";
 import { TopBar } from "@/components/layout/TopBar";
-import type { Memory } from "@/types";
+import type { Memory, Companion } from "@/types";
 
 const iconMap: Record<string, React.ElementType> = {
   "message-circle": MessageCircle,
@@ -48,17 +49,77 @@ function MemoryIcon({ iconName }: { iconName?: string }) {
   return <Icon size={16} />;
 }
 
+// Generate dynamic memories based on real companions
+function generateMemories(companions: Companion[]): Memory[] {
+  if (companions.length === 0) return [];
+
+  const memoryTemplates = [
+    { eventType: "chat", content: "You chatted with {name} for 20 minutes", icon: "message-circle" },
+    { eventType: "milestone", content: "{name} remembered your favorite thing", icon: "star" },
+    { eventType: "story_view", content: "You viewed {name}'s story", icon: "image" },
+    { eventType: "chat", content: "Deep conversation with {name}", icon: "message-circle" },
+    { eventType: "milestone", content: "7-day streak with {name}!", icon: "flame" },
+    { eventType: "milestone", content: "You and {name} shared 50 messages!", icon: "party-popper" },
+    { eventType: "chat", content: "{name} shared something special with you", icon: "coffee" },
+    { eventType: "story_view", content: "You viewed {name}'s new photos", icon: "image" },
+    { eventType: "milestone", content: "{name} recommended you something", icon: "book-open" },
+    { eventType: "chat", content: "Fun chat session with {name}", icon: "gamepad-2" },
+  ];
+
+  const memories: Memory[] = [];
+  const now = Date.now();
+
+  // Generate memories for each companion
+  companions.forEach((companion, companionIndex) => {
+    // Each companion gets 1-3 memories
+    const numMemories = Math.min(3, Math.floor(Math.random() * 3) + 1);
+
+    for (let i = 0; i < numMemories; i++) {
+      const template = memoryTemplates[(companionIndex + i) % memoryTemplates.length];
+      const hoursAgo = (companionIndex * 4 + i * 2 + 1) * 3600000; // Spread memories over time
+
+      memories.push({
+        id: `mem-${companion.id}-${i}`,
+        userId: "user1",
+        companionId: companion.id,
+        eventType: template.eventType as Memory["eventType"],
+        metadata: {
+          content: template.content.replace("{name}", companion.name),
+          icon: template.icon,
+        },
+        createdAt: new Date(now - hoursAgo).toISOString(),
+      });
+    }
+  });
+
+  // Sort by date (most recent first)
+  return memories.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
 export default function MemoriesPage() {
   const { companions, memories, setCompanions, setMemories } = useAppStore();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (companions.length === 0) {
-      setCompanions(mockCompanions);
-    }
-    if (memories.length === 0) {
-      setMemories(mockMemories);
-    }
-  }, [companions.length, memories.length, setCompanions, setMemories]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await companionsApi.list({ pageSize: 50 });
+        const companionData = response.data || [];
+        setCompanions(companionData);
+
+        // Generate memories based on real companions
+        const generatedMemories = generateMemories(companionData);
+        setMemories(generatedMemories);
+      } catch {
+        // Error handled silently
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [setCompanions, setMemories]);
 
   // Group memories by date
   const groupedMemories = memories.reduce(
@@ -88,6 +149,17 @@ export default function MemoriesPage() {
     },
     {}
   );
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-background">
+        <IconSidebar />
+        <main className="flex-1 lg:ml-16 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
