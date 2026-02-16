@@ -185,6 +185,12 @@ export default function ChatPage() {
       let fullResponse = "";
 
       try {
+        // Build conversation history for context
+        const history = chatMessages.slice(-10).map(msg => ({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.content,
+        }));
+
         // Use streaming API
         const response = await fetch("/api/chat/stream", {
           method: "POST",
@@ -193,6 +199,7 @@ export default function ChatPage() {
             companionId,
             message: content,
             mood: currentMood,
+            history,
           }),
         });
 
@@ -314,7 +321,7 @@ export default function ChatPage() {
         setIsGeneratingImage(false);
       }
     },
-    [companion, companionId, addMessage, addMemory, currentMood, generatePhoto]
+    [companion, companionId, addMessage, addMemory, currentMood, generatePhoto, chatMessages]
   );
 
   // Request photo button handler
