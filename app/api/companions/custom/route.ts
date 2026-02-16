@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       name,
       category,
       bio,
-      avatarUrl,
+      avatar,
       personality,
       tags,
       age,
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       name,
       category,
       bio: bio || `Meet ${name}, your new AI companion!`,
-      avatar: avatarUrl || "/images/companions/default.jpg",
+      avatar: avatar || "/images/companions/default.jpg",
       personality: personality || {
         friendliness: 75,
         humor: 60,

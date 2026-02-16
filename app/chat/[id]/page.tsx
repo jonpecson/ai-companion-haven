@@ -125,7 +125,7 @@ export default function ChatPage() {
   );
 
   const handleSend = useCallback(
-    async (content: string) => {
+    async (content: string, imageUrl?: string) => {
       if (!companion) return;
 
       const userMessage: Message = {
@@ -133,10 +133,17 @@ export default function ChatPage() {
         conversationId: `conv-${companionId}`,
         sender: "user",
         content,
+        imageUrl,
         createdAt: new Date().toISOString(),
       };
 
       addMessage(companionId, userMessage);
+
+      // If only image with no text, don't call AI
+      if (!content && imageUrl) {
+        return;
+      }
+
       setIsTyping(true);
 
       const wantsPhoto = isPhotoRequest(content);

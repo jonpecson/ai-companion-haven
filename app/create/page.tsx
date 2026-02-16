@@ -140,7 +140,7 @@ export default function CreateCompanionPage() {
         name: formData.name,
         category: formData.category,
         bio: formData.bio || `Meet ${formData.name}, your new AI companion!`,
-        avatarUrl: formData.avatar,
+        avatar: formData.avatar,
         personality: formData.personality,
         tags: formData.tags.length > 0 ? formData.tags : ["Friendly"],
         age: formData.age,
