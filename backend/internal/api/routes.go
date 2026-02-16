@@ -66,8 +66,12 @@ func SetupRoutes(router *gin.Engine, h *Handlers) {
 		moods.GET("", h.GetMood)
 	}
 
-	// Health check
+	// Health check with version
 	api.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
+		c.JSON(200, gin.H{
+			"status":  "ok",
+			"version": "1.1.0",
+			"claude":  h.claudeService.IsConfigured(),
+		})
 	})
 }
