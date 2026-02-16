@@ -15,6 +15,7 @@ interface StoryViewerProps {
   onViewed: (storyId: string) => void;
   onPrevCompanion?: () => void;
   onNextCompanion?: () => void;
+  onProfileClick?: () => void;
 }
 
 export function StoryViewer({
@@ -25,6 +26,7 @@ export function StoryViewer({
   onViewed,
   onPrevCompanion,
   onNextCompanion,
+  onProfileClick,
 }: StoryViewerProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
@@ -138,7 +140,13 @@ export function StoryViewer({
 
           {/* Header */}
           <div className="absolute top-8 left-0 right-0 z-10 flex items-center justify-between px-4">
-            <div className="flex items-center gap-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onProfileClick?.();
+              }}
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
               <div className="relative w-8 h-8 rounded-full overflow-hidden">
                 <Image
                   src={companion.avatar}
@@ -151,7 +159,7 @@ export function StoryViewer({
               <span className="text-white text-sm font-medium">
                 {companion.name}
               </span>
-            </div>
+            </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();

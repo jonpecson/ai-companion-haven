@@ -20,6 +20,7 @@ function DesktopStoryViewer({
   onViewed,
   onPrevCompanion,
   onNextCompanion,
+  onProfileClick,
 }: {
   stories: Story[];
   companion: Companion;
@@ -27,6 +28,7 @@ function DesktopStoryViewer({
   onViewed: (storyId: string) => void;
   onPrevCompanion?: () => void;
   onNextCompanion?: () => void;
+  onProfileClick: () => void;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -119,7 +121,10 @@ function DesktopStoryViewer({
 
       {/* Header */}
       <div className="absolute top-8 left-0 right-0 z-10 flex items-center justify-between px-4">
-        <div className="flex items-center gap-3">
+        <button
+          onClick={onProfileClick}
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+        >
           <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/50">
             <Image
               src={companion.avatar}
@@ -129,7 +134,7 @@ function DesktopStoryViewer({
               sizes="40px"
             />
           </div>
-          <div>
+          <div className="text-left">
             <span className="text-white text-sm font-medium block">
               {companion.name}
             </span>
@@ -137,7 +142,7 @@ function DesktopStoryViewer({
               {currentIndex + 1} of {stories.length}
             </span>
           </div>
-        </div>
+        </button>
         <button
           onClick={onClose}
           className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
@@ -373,6 +378,7 @@ function StoriesContent() {
                 ? handleNextCompanion
                 : undefined
             }
+            onProfileClick={() => router.push(`/companions/${activeCompanion.id}`)}
           />
         )}
       </main>
@@ -467,6 +473,7 @@ function StoriesContent() {
                     ? handleNextCompanion
                     : undefined
                 }
+                onProfileClick={() => router.push(`/companions/${activeCompanion.id}`)}
               />
             </div>
           ) : (
