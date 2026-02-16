@@ -14,7 +14,7 @@ import { CompanionCard } from "@/components/home/CompanionCard";
 function CompanionsContent() {
   const searchParams = useSearchParams();
   const { companions, setCompanions } = useAppStore();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState<Category>(
     (searchParams.get("category") as Category) || "all"
   );
@@ -46,12 +46,18 @@ function CompanionsContent() {
     if (cat && ["all", "girls", "guys", "anime"].includes(cat)) {
       setCategory(cat);
     }
+    const searchQuery = searchParams.get("search");
+    if (searchQuery !== null) {
+      setSearch(searchQuery);
+    }
   }, [searchParams]);
 
   const filtered = companions.filter((c) => {
+    const searchLower = search.toLowerCase();
     const matchSearch =
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.bio.toLowerCase().includes(search.toLowerCase());
+      c.name.toLowerCase().includes(searchLower) ||
+      c.bio.toLowerCase().includes(searchLower) ||
+      (c.tags && c.tags.some(tag => tag.toLowerCase().includes(searchLower)));
     return matchSearch;
   });
 
