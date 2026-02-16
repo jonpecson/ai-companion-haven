@@ -10,9 +10,10 @@ import { toast } from "sonner";
 import { useAppStore, useMood } from "@/lib/store";
 import { companionsApi, chatApi, imagesApi } from "@/lib/api";
 import { MessageBubble } from "@/components/chat/MessageBubble";
-import { TypingIndicator } from "@/components/chat/TypingIndicator";
+import { StreamingMessage } from "@/components/chat/StreamingMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ConversationList } from "@/components/chat/ConversationList";
+import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { generateId, getSessionId } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import type { Message, MoodType, Companion, PhotoType } from "@/types";
@@ -63,6 +64,8 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
   const [showConversations, setShowConversations] = useState(true);
+  const [streamingContent, setStreamingContent] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const companionId = params.id as string;
@@ -118,7 +121,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages, isTyping, isGeneratingImage]);
+  }, [chatMessages, isTyping, isGeneratingImage, streamingContent]);
 
   // Generate a photo for the companion
   const generatePhoto = useCallback(
@@ -167,97 +170,133 @@ export default function ChatPage() {
         return;
       }
 
-      setIsTyping(true);
-
       const wantsPhoto = isPhotoRequest(content);
       const photoType = wantsPhoto ? detectPhotoType(content) : null;
 
-      try {
-        // Build conversation history for context
-        const history = chatMessages.slice(-10).map(msg => ({
-          role: msg.sender === "user" ? "user" : "assistant",
-          content: msg.content,
-        }));
+      // Start streaming
+      setIsStreaming(true);
+      setStreamingContent("");
 
-        // Call the real AI API
-        const response = await chatApi.publicChat({
-          companionId,
-          message: content,
-          history,
-          mood: currentMood,
+      const aiMessageId = generateId();
+      let fullResponse = "";
+
+      try {
+        // Use streaming API
+        const response = await fetch("/api/chat/stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companionId,
+            message: content,
+            mood: currentMood,
+          }),
         });
 
-        const aiMessageId = generateId();
-
-        if (wantsPhoto) {
-          // If user requested a photo, add a message with loading state
-          const aiMessage: Message = {
-            id: aiMessageId,
-            conversationId: `conv-${companionId}`,
-            sender: "ai",
-            content: response.data?.response || "Here's a photo for you!",
-            isGeneratingImage: true,
-            createdAt: new Date().toISOString(),
-          };
-          addMessage(companionId, aiMessage);
-          setIsTyping(false);
-          setIsGeneratingImage(true);
-
-          // Generate the photo
-          await generatePhoto(photoType!, aiMessageId);
-          setIsGeneratingImage(false);
-        } else {
-          // Regular text message
-          const aiMessage: Message = {
-            id: aiMessageId,
-            conversationId: `conv-${companionId}`,
-            sender: "ai",
-            content: response.data?.response || "I'm having trouble responding right now. Let's try again!",
-            createdAt: new Date().toISOString(),
-          };
-          addMessage(companionId, aiMessage);
+        if (!response.ok) {
+          throw new Error("Stream request failed");
         }
 
-        // Add memory for this chat interaction
-        addMemory({
-          id: `mem-${generateId()}`,
-          userId: "user1",
-          companionId,
-          eventType: wantsPhoto ? "chat" : "chat",
-          metadata: {
-            content: wantsPhoto
-              ? `${companion.name} sent you a photo`
-              : `You chatted with ${companion.name}`,
-            icon: wantsPhoto ? "image" : "message-circle",
-          },
-          createdAt: new Date().toISOString(),
-        });
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
 
-        // Save messages to database (async, don't wait)
-        const sessionId = getSessionId();
-        chatApi.savePublicMessages({
-          sessionId,
-          companionId,
-          messages: [
-            {
-              id: userMessage.id,
-              sender: userMessage.sender,
-              content: userMessage.content,
-              imageUrl: userMessage.imageUrl,
-              createdAt: userMessage.createdAt,
-            },
-            {
-              id: aiMessageId,
-              sender: "ai",
-              content: response.data?.response || "",
-              createdAt: new Date().toISOString(),
-            },
-          ],
-        }).catch(() => {
-          // Database save failed - messages are still in local storage
-        });
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split("\n");
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.content) {
+                    fullResponse += data.content;
+                    setStreamingContent(fullResponse);
+                  }
+                  if (data.done) {
+                    // Streaming complete
+                    setIsStreaming(false);
+
+                    if (wantsPhoto) {
+                      // Add message with photo loading state
+                      const aiMessage: Message = {
+                        id: aiMessageId,
+                        conversationId: `conv-${companionId}`,
+                        sender: "ai",
+                        content: fullResponse || "Here's a photo for you!",
+                        isGeneratingImage: true,
+                        createdAt: new Date().toISOString(),
+                      };
+                      addMessage(companionId, aiMessage);
+                      setStreamingContent("");
+                      setIsGeneratingImage(true);
+                      await generatePhoto(photoType!, aiMessageId);
+                      setIsGeneratingImage(false);
+                    } else {
+                      // Add the complete message
+                      const aiMessage: Message = {
+                        id: aiMessageId,
+                        conversationId: `conv-${companionId}`,
+                        sender: "ai",
+                        content: fullResponse,
+                        createdAt: new Date().toISOString(),
+                      };
+                      addMessage(companionId, aiMessage);
+                      setStreamingContent("");
+                    }
+
+                    // Add memory for this chat interaction
+                    addMemory({
+                      id: `mem-${generateId()}`,
+                      userId: "user1",
+                      companionId,
+                      eventType: "chat",
+                      metadata: {
+                        content: wantsPhoto
+                          ? `${companion.name} sent you a photo`
+                          : `You chatted with ${companion.name}`,
+                        icon: wantsPhoto ? "image" : "message-circle",
+                      },
+                      createdAt: new Date().toISOString(),
+                    });
+
+                    // Save messages to database (async, don't wait)
+                    const sessionId = getSessionId();
+                    chatApi.savePublicMessages({
+                      sessionId,
+                      companionId,
+                      messages: [
+                        {
+                          id: userMessage.id,
+                          sender: userMessage.sender,
+                          content: userMessage.content,
+                          imageUrl: userMessage.imageUrl,
+                          createdAt: userMessage.createdAt,
+                        },
+                        {
+                          id: aiMessageId,
+                          sender: "ai",
+                          content: fullResponse,
+                          createdAt: new Date().toISOString(),
+                        },
+                      ],
+                    }).catch(() => {
+                      // Database save failed - messages are still in local storage
+                    });
+                  }
+                } catch {
+                  // Parse error - continue
+                }
+              }
+            }
+          }
+        }
       } catch {
-        // AI response failed - show fallback message
+        // Streaming failed - show fallback message
+        setIsStreaming(false);
+        setStreamingContent("");
         const aiMessage: Message = {
           id: generateId(),
           conversationId: `conv-${companionId}`,
@@ -271,16 +310,16 @@ export default function ChatPage() {
         setIsGeneratingImage(false);
       }
     },
-    [companion, companionId, addMessage, addMemory, chatMessages, currentMood, generatePhoto]
+    [companion, companionId, addMessage, addMemory, currentMood, generatePhoto]
   );
 
   // Request photo button handler
   const handleRequestPhoto = useCallback(async () => {
-    if (!companion || isTyping || isGeneratingImage) return;
+    if (!companion || isTyping || isGeneratingImage || isStreaming) return;
 
     // Simulate user asking for a selfie
     handleSend("Send me a cute selfie!");
-  }, [companion, isTyping, isGeneratingImage, handleSend]);
+  }, [companion, isTyping, isGeneratingImage, isStreaming, handleSend]);
 
   if (loading) {
     return (
@@ -377,7 +416,7 @@ export default function ChatPage() {
           <div className="flex items-center gap-1 lg:gap-2">
             <button
               onClick={handleRequestPhoto}
-              disabled={isTyping || isGeneratingImage}
+              disabled={isTyping || isGeneratingImage || isStreaming}
               className="p-2 lg:p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors disabled:opacity-50"
               title="Request photo"
             >
@@ -429,7 +468,9 @@ export default function ChatPage() {
             {chatMessages.map((msg) => (
               <MessageBubble key={msg.id} message={msg} />
             ))}
-            {isTyping && <TypingIndicator />}
+            {isStreaming && streamingContent && (
+              <StreamingMessage content={streamingContent} isComplete={false} />
+            )}
             <div ref={messagesEndRef} />
           </div>
         </div>
@@ -437,7 +478,7 @@ export default function ChatPage() {
         {/* Input */}
         <div className="lg:px-6">
           <div className="max-w-3xl mx-auto">
-            <ChatInput onSend={handleSend} disabled={isTyping || isGeneratingImage} />
+            <ChatInput onSend={handleSend} disabled={isTyping || isGeneratingImage || isStreaming} />
           </div>
         </div>
       </div>
