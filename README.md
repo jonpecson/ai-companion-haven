@@ -2,7 +2,7 @@
 
 **Live Demo:** https://ai-companion-haven.vercel.app
 
-A full-stack AI Companion web application built for the Nectar.ai Full Stack Engineer take-home assessment. This application provides AI companions with Instagram-style Stories, real-time chat, and two original net-new features: **Memory Timeline** and **AI Mood Mode**.
+A full-stack AI Companion web application featuring AI-powered conversations with Anthropic Claude, Instagram-style Stories, real-time streaming chat, and personalized companion interactions.
 
 ![AI Companion Haven](https://ai-companion-haven.vercel.app/images/companions/mia.jpg)
 
@@ -10,95 +10,136 @@ A full-stack AI Companion web application built for the Nectar.ai Full Stack Eng
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
+- [Third-Party Services](#third-party-services)
 - [Architecture](#architecture)
 - [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
 - [Database Schema](#database-schema)
-- [Original Features](#original-features)
-- [Competitor Analysis](#competitor-analysis)
-- [Design Decisions](#design-decisions)
-- [Scalability](#scalability)
-- [Challenges & Solutions](#challenges--solutions)
 
 ## Features
 
-### Core Features
-- **11 AI Companions**: Browse and interact with diverse companions across 3 categories:
+### Frontend Features
+
+#### AI Chat
+- **Real-time Streaming Responses**: Messages appear word-by-word with typing animation using Server-Sent Events (SSE)
+- **Anthropic Claude Integration**: AI responses powered by Claude 3 Haiku/Sonnet with personality-aware prompts
+- **Conversation History**: Persistent chat history stored in database, synced across sessions
+- **Mood-Aware Chat**: AI adapts responses based on user's selected mood (Calm, Romantic, Playful, Deep)
+- **Photo Descriptions**: When users request photos, companions describe personalized photos matching their personality
+- **Emoji Picker**: Built-in emoji picker for expressive conversations
+- **Image Sharing**: Upload and share images in chat with preview
+
+#### Companions
+- **11 AI Companions** across 3 categories:
   - **Girls** (4): Mia Chen, Sofia Martinez, Emma Laurent, Aria Rose
   - **Guys** (4): Alex Rivera, Ryan Kim, Atlas Monroe, Kai Nakamura
   - **Anime** (3): Sakura Tanaka, Luna Nightshade, Nova Valentine
+- **Detailed Profiles**: Personality traits, bio, interests, and tags
+- **Search & Filter**: Search companions by name or tags, filter by category
+
+#### Stories
 - **Instagram-style Stories**: Full-screen story viewer with:
   - Progress bars showing story position
   - Auto-advance (5 seconds per story)
   - Tap navigation (left/right sides)
   - Swipe between companions
   - 35+ story posts across companions
-- **Real-time Chat**: Mood-aware AI responses with:
-  - Typing indicators
-  - Photo request detection ("send me a selfie")
-  - Dynamic image generation
-  - Conversation sidebar
-- **Companion Creator**: Multi-step wizard with:
-  - Personality trait sliders
-  - Tag selection
-  - Avatar upload
-  - Category selection
 
-### Original Features (Net-New)
+#### Companion Creator
+- **5-Step Wizard**: Create custom companions with:
+  - Basic info (name, age, bio)
+  - Category selection (Girls, Guys, Anime)
+  - Personality trait sliders (Friendliness, Humor, Intelligence, Romantic, Flirty)
+  - Interest tag selection
+  - Avatar selection from AI-generated images
 
-#### 1. Memory Timeline (`/memories`)
-Visual chronological timeline of user-companion interactions:
+#### Memory Timeline (`/memories`)
+- Visual chronological timeline of interactions
 - Chat sessions with timestamps
-- Story views
-- Milestone achievements
-- Mood changes
+- Story views tracking
 - Grouped by date (Today, Yesterday, etc.)
 - Animated entrance with Framer Motion
-- Desktop sidebar with stats
 
-#### 2. AI Mood Mode (`/mood`)
-User-selectable mood that transforms the entire chat experience:
+#### AI Mood Mode (`/mood`)
+- User-selectable mood that transforms chat experience:
 
-| Mood | Emoji | Theme | AI Response Style |
-|------|-------|-------|-------------------|
-| Calm | 🧘 | Blue/Teal | Peaceful, meditative |
-| Romantic | 💕 | Pink/Rose | Sweet, heartfelt |
-| Playful | 🎉 | Orange/Yellow | Fun, energetic |
-| Deep | 🌌 | Purple/Indigo | Philosophical |
+| Mood | Theme | AI Response Style |
+|------|-------|-------------------|
+| Calm 🧘 | Blue/Teal | Peaceful, meditative |
+| Romantic 💕 | Pink/Rose | Sweet, heartfelt |
+| Playful 🎉 | Orange/Yellow | Fun, energetic |
+| Deep 🌌 | Purple/Indigo | Philosophical |
 
-- Real-time UI theme adaptation
-- Mood passed to AI for response selection
-- Persistent across sessions
+#### Progressive Web App (PWA)
+- Installable on mobile devices
+- Custom app icon with pink gradient heart
+- Offline-ready manifest
+
+### Backend Features
+
+#### AI Services
+- **Anthropic Claude Integration**: Primary AI provider with detailed system prompts
+- **Groq Fallback**: Secondary AI provider for redundancy
+- **Fallback AI Service**: Simple pattern-based responses when APIs unavailable
+- **Personality-Aware Prompts**: System prompts built from companion traits, bio, and interests
+
+#### Chat System
+- **Public Chat API**: No authentication required for demo
+- **Session-based Persistence**: Anonymous users identified by session ID
+- **Conversation History**: Messages stored in PostgreSQL
+- **Streaming Support**: Real-time response streaming via SSE
+
+#### Authentication
+- **JWT Authentication**: Secure token-based auth
+- **User Registration/Login**: Full auth flow implemented
+- **Protected Routes**: Middleware for authenticated endpoints
+
+#### Database
+- **PostgreSQL**: Robust relational database
+- **Auto-migrations**: Tables created on startup
+- **Companion Seeding**: Pre-populated with 11 companions
 
 ## Tech Stack
 
 ### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Animations**: Framer Motion
-- **State**: Zustand
-- **Components**: Radix UI primitives
+| Technology | Purpose |
+|------------|---------|
+| **Next.js 14** | React framework with App Router |
+| **TypeScript** | Type-safe development |
+| **Tailwind CSS** | Utility-first styling |
+| **Framer Motion** | Animations and transitions |
+| **Zustand** | State management with persistence |
+| **Radix UI** | Accessible UI primitives |
+| **shadcn/ui** | Pre-built component library |
+| **emoji-mart** | Emoji picker component |
+| **Sonner** | Toast notifications |
 
 ### Backend
-- **Language**: Go (Golang)
-- **Framework**: Gin
-- **Real-time**: Gorilla WebSockets
-- **Auth**: JWT (golang-jwt)
+| Technology | Purpose |
+|------------|---------|
+| **Go 1.21+** | Backend language |
+| **Gin** | HTTP web framework |
+| **lib/pq** | PostgreSQL driver |
+| **golang-jwt** | JWT authentication |
 
 ### Database
-- **PostgreSQL** (recommended: Supabase or CockroachDB)
-- **Why PostgreSQL?**:
-  - JSONB support for flexible personality storage
-  - Robust indexing for scalable queries
-  - Array types for companion tags
-  - Strong consistency for chat messages
+| Technology | Purpose |
+|------------|---------|
+| **PostgreSQL** | Primary database |
+| **AWS RDS** | Managed database hosting |
 
-### Deployment
-- **Frontend**: Vercel
-- **Backend**: Fly.io
-- **Database**: Supabase/CockroachDB
+## Third-Party Services
+
+| Service | Purpose | Environment Variable |
+|---------|---------|---------------------|
+| **Anthropic Claude** | AI chat responses | `ANTHROPIC_API_KEY` |
+| **Groq** | Fallback AI provider | `GROQ_API_KEY` |
+| **AWS S3** | Image/media storage | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` |
+| **AWS RDS** | PostgreSQL database | `DATABASE_URL` |
+| **Vercel** | Frontend hosting | - |
+| **Render** | Backend hosting | - |
 
 ## Architecture
 
@@ -106,24 +147,29 @@ User-selectable mood that transforms the entire chat experience:
 ┌─────────────────────────────────────────────────────────────┐
 │                     Next.js Frontend                        │
 │              (App Router + Server Components)               │
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │   Chat UI    │  │   Stories    │  │   Companions     │  │
+│  │  (Streaming) │  │   Viewer     │  │   Browser        │  │
+│  └──────────────┘  └──────────────┘  └──────────────────┘  │
 └────────────────────────┬────────────────────────────────────┘
-                         │ HTTP/REST + WebSocket
+                         │ HTTP/REST + SSE
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      Go API Layer                           │
-│          Gin Framework + Gorilla WebSockets                 │
+│                      Go Backend (Gin)                       │
 ├─────────────────────────────────────────────────────────────┤
 │ ┌─────────────┐ ┌──────────────┐ ┌────────────────────────┐ │
-│ │    Auth     │ │   Services   │ │      WebSocket Hub     │ │
-│ │  (JWT)      │ │   (AI, DB)   │ │   (Real-time Chat)     │ │
+│ │    Auth     │ │   Claude AI  │ │      Groq AI           │ │
+│ │   (JWT)     │ │   Service    │ │      (Fallback)        │ │
 │ └─────────────┘ └──────────────┘ └────────────────────────┘ │
 └────────────────────────┬────────────────────────────────────┘
                          │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      PostgreSQL                             │
-│    Users, Companions, Stories, Messages, Memories, Moods    │
-└─────────────────────────────────────────────────────────────┘
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│  PostgreSQL  │ │   AWS S3     │ │  Anthropic   │
+│   (AWS RDS)  │ │   (Media)    │ │   Claude API │
+└──────────────┘ └──────────────┘ └──────────────┘
 ```
 
 ## Getting Started
@@ -140,7 +186,7 @@ User-selectable mood that transforms the entire chat experience:
 npm install
 
 # Copy environment variables
-cp .env.local.example .env.local
+cp .env.example .env.local
 
 # Run development server
 npm run dev
@@ -157,26 +203,46 @@ cp .env.example .env
 # Install dependencies
 go mod download
 
-# Run migrations and seed data
-psql -d your_database -f migrations/seed.sql
-
-# Run the server
+# Run the server (migrations run automatically)
 go run cmd/server/main.go
 ```
 
-### Environment Variables
+## Environment Variables
 
-**Frontend (.env.local)**
-```
-NEXT_PUBLIC_API_URL=http://localhost:8080
-NEXT_PUBLIC_WS_URL=ws://localhost:8080
+### Frontend (.env.local)
+```env
+# Backend URL for API calls
+BACKEND_URL=https://ai-companion-haven.onrender.com
+
+# Public API URL (leave empty to use Next.js API routes)
+NEXT_PUBLIC_API_URL=
 ```
 
-**Backend (.env)**
-```
+### Backend (.env)
+```env
+# Server
 PORT=8080
-DATABASE_URL=postgres://user:pass@localhost:5432/nectar_ai
+
+# Database
+DATABASE_URL=postgres://user:pass@host:5432/nectar_ai
+# Or individual variables:
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your-password
+DB_NAME=nectar_ai
+DB_SSLMODE=disable
+
+# Authentication
 JWT_SECRET=your-secret-key
+
+# AI Services
+ANTHROPIC_API_KEY=sk-ant-api03-...
+CLAUDE_MODEL=claude-3-haiku-20240307
+GROQ_API_KEY=gsk_...
+
+# CORS
+ALLOWED_ORIGINS=https://ai-companion-haven.vercel.app,http://localhost:3000
 ```
 
 ## Project Structure
@@ -187,255 +253,167 @@ JWT_SECRET=your-secret-key
 │   ├── companions/        # Companion listing & detail
 │   ├── chat/              # Real-time chat interface
 │   ├── stories/           # Stories viewer
-│   ├── memories/          # Memory timeline (custom feature)
-│   ├── mood/              # AI Mood Mode (custom feature)
-│   └── create/            # Companion creator
+│   ├── memories/          # Memory timeline
+│   ├── mood/              # AI Mood Mode
+│   ├── create/            # Companion creator
+│   ├── settings/          # User settings
+│   ├── icon.tsx           # Dynamic favicon
+│   └── api/               # Next.js API routes
+│       ├── chat/          # Chat streaming endpoint
+│       ├── companions/    # Companion CRUD
+│       └── stories/       # Stories API
 ├── components/
-│   ├── ui/                # Base UI components
-│   ├── chat/              # Chat-specific components
+│   ├── ui/                # Base UI components (shadcn)
+│   ├── chat/              # Chat components
+│   │   ├── ChatInput.tsx  # Message input with emoji
+│   │   ├── MessageBubble.tsx
+│   │   └── StreamingMessage.tsx
 │   ├── stories/           # Story viewer components
-│   └── companions/        # Companion cards
+│   ├── companions/        # Companion cards
+│   └── layout/            # Layout components
+│       ├── TopBar.tsx     # Search & navigation
+│       └── BottomNav.tsx  # Mobile navigation
 ├── lib/
-│   ├── api.ts             # API client
+│   ├── api.ts             # API client functions
 │   ├── store.ts           # Zustand store
-│   └── websocket.ts       # WebSocket client
-├── types/                  # TypeScript definitions
-├── backend/
-│   ├── cmd/server/        # Application entry point
-│   └── internal/
-│       ├── api/           # HTTP handlers & routes
-│       ├── services/      # Business logic (AI, Auth)
-│       ├── models/        # Data models
-│       ├── db/            # Database layer
-│       └── websocket/     # WebSocket hub
-└── migrations/            # SQL migrations & seed data
+│   └── utils.ts           # Utility functions
+├── types/                 # TypeScript definitions
+├── public/
+│   ├── images/            # Static images
+│   │   └── companions/    # Companion avatars
+│   └── manifest.json      # PWA manifest
+└── backend/
+    ├── cmd/server/        # Application entry point
+    └── internal/
+        ├── api/           # HTTP handlers & routes
+        │   ├── handlers.go
+        │   ├── routes.go
+        │   └── middleware.go
+        ├── services/      # Business logic
+        │   ├── claude.go  # Anthropic Claude service
+        │   ├── groq.go    # Groq AI service
+        │   ├── ai.go      # Fallback AI service
+        │   └── auth.go    # JWT authentication
+        ├── models/        # Data models
+        └── db/            # Database layer
+            └── db.go      # Connection & migrations
 ```
 
 ## API Documentation
 
-### Authentication
+### Public Endpoints (No Auth Required)
+
+#### Companions
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/companions` | GET | List companions (paginated, filterable) |
+| `/api/companions/:id` | GET | Get companion details |
+| `/api/companions/custom` | POST | Create custom companion |
+
+#### Chat
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/chat/public` | POST | Send message, get AI response |
+| `/api/chat/public/save` | POST | Save messages to database |
+| `/api/chat/public/history/:companionId` | GET | Get chat history |
+| `/api/chat/public/conversations` | GET | List conversations |
+
+#### Stories
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/stories` | GET | List all stories |
+| `/api/stories/:companionId` | GET | Get companion's stories |
+
+### Protected Endpoints (Auth Required)
+
+#### Authentication
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/auth/register` | POST | Create new user |
 | `/api/auth/login` | POST | Authenticate user |
 | `/api/auth/me` | GET | Get current user |
 
-### Companions
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/companions` | GET | List companions (paginated) |
-| `/api/companions/:id` | GET | Get companion details |
-| `/api/companions/custom` | POST | Create custom companion |
-
-### Stories
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/stories` | GET | List all stories |
-| `/api/stories/:companionId` | GET | Get companion's stories |
-| `/api/stories/view` | POST | Mark story as viewed |
-
-### Chat
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/chat/start` | POST | Start conversation |
-| `/api/chat/message` | POST | Send message |
-| `/api/chat/history/:companionId` | GET | Get chat history |
-| `/ws/chat/:conversationId` | WS | Real-time chat |
-
-### Memories (Custom Feature)
+#### Memories
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/memories` | GET | Get user's memory timeline |
 
-### Moods (Custom Feature)
+#### Moods
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/moods` | POST | Set user's mood |
 | `/api/moods` | GET | Get current mood |
 
+### Frontend API Routes
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/chat/stream` | POST | Streaming chat responses (SSE) |
+
 ## Database Schema
 
 ### Tables
-- **users**: User accounts
-- **companions**: AI companion profiles with personality JSON
-- **stories**: Companion stories with media
-- **story_views**: Track viewed stories per user
-- **conversations**: User-companion chat sessions
-- **messages**: Chat messages
-- **memories**: Interaction timeline events
-- **moods**: User mood preferences
 
-### Key Indexes
-- `stories(companion_id)` - Fast story retrieval
-- `messages(conversation_id)` - Chat pagination
-- `conversations(user_id, companion_id)` - Session lookup
-- `story_views(user_id)` - Viewed status
+```sql
+-- Users
+users (id, email, username, password_hash, avatar_url, created_at)
 
-## Original Features
+-- Companions
+companions (id, name, category, bio, avatar_url, personality_json,
+           tags[], age, status, style, scenario, greeting,
+           appearance_json, interests[], communication_style,
+           gallery_urls[], is_featured, message_count, created_at)
 
-### 1. Memory Timeline (`/memories`)
+-- Stories
+stories (id, companion_id, media_url, media_type, caption,
+        order_index, expires_at, created_at)
 
-A chronological timeline of all user interactions:
-- Chat sessions with duration
-- Story views
-- Milestone achievements (streaks, message counts)
-- Mood changes
+-- Story Views
+story_views (id, story_id, user_id, viewed_at)
 
-**Implementation**:
-- Events stored in `memories` table with JSONB metadata
-- Grouped by date for timeline display
-- Framer Motion animations for smooth scrolling
-- Icon mapping based on event type
+-- Conversations (authenticated users)
+conversations (id, user_id, companion_id, created_at)
 
-### 2. AI Mood Mode (`/mood`)
+-- Messages (authenticated users)
+messages (id, conversation_id, sender, content, created_at)
 
-Customizable mood that affects the entire chat experience:
-- **Calm**: Peaceful, meditative responses
-- **Romantic**: Sweet, heartfelt messages
-- **Playful**: Fun, energetic interactions
-- **Deep**: Philosophical discussions
+-- Public Conversations (anonymous users)
+public_conversations (id, session_id, companion_id, created_at)
 
-**Implementation**:
-- Mood stored per user in `moods` table
-- Chat UI theme adapts (gradient backgrounds)
-- AI response pool selected based on mood
-- Persistent across sessions
+-- Public Messages (anonymous users)
+public_messages (id, conversation_id, sender, content, image_url, created_at)
 
-## Competitor Analysis
+-- Memories
+memories (id, user_id, companion_id, event_type, metadata, created_at)
 
-### Detailed Competitor Study
-
-| Feature | Nectar.ai | Replika | Character.AI | Anima | This Project |
-|---------|-----------|---------|--------------|-------|--------------|
-| Stories | Yes | No | No | No | **Yes** |
-| Mood Selection | Limited | Yes | No | Yes | **Yes (4 modes)** |
-| Memory Timeline | No | Basic | No | Basic | **Yes (Full)** |
-| Photo Generation | Yes | Limited | No | Yes | **Yes** |
-| Custom Companions | Yes | Limited | Yes | Yes | **Yes** |
-| WebSocket Chat | Yes | Yes | Yes | Yes | **Yes** |
-| Mobile-First | Yes | Yes | No | Yes | **Yes** |
-
-### Studied Competitors
-
-#### 1. **Nectar.ai** (Target Product)
-- **Strengths**: Beautiful UI, stories feature, high-quality images, immersive experience
-- **What I Borrowed**: Story format, gradient aesthetics, personality sliders, category filtering
-- **What I Improved**: Added mood-aware chat theming, comprehensive memory timeline
-
-#### 2. **Replika**
-- **Strengths**: Strong emotional connection, memory of past conversations
-- **What I Borrowed**: Conversation continuity concept, relationship building mechanics
-- **What I Improved**: Visual memory timeline vs. invisible context
-
-#### 3. **Character.AI**
-- **Strengths**: Diverse personas, creative conversations
-- **What I Borrowed**: Personality trait customization
-- **What I Improved**: Added visual stories for deeper engagement
-
-#### 4. **Anima**
-- **Strengths**: Mood tracking, relationship levels
-- **What I Borrowed**: Mood affects conversation style
-- **What I Improved**: Visual mood selection UI with real-time theme changes
-
-### Key Insights Applied
-
-1. **Stories Create Emotional Connection**: Unlike chat-only apps, stories make companions feel like they have lives outside conversations
-2. **Mood Awareness = Authenticity**: Users want control over conversation tone without explicit instructions
-3. **Visual History Builds Investment**: Seeing a timeline of interactions creates emotional attachment
-4. **Mobile-First is Non-Negotiable**: 80%+ of users access on mobile devices
-
-## Design Decisions
-
-### Why Next.js App Router?
-- Server components for faster initial load
-- Built-in image optimization
-- Simplified routing with file-based structure
-- Better SEO for public pages
-
-### Why Go for Backend?
-- Excellent WebSocket support (gorilla/websocket)
-- Fast compile times for rapid iteration
-- Simple concurrency model for real-time features
-- Low memory footprint for deployment
-
-### Why Zustand over Redux/Context?
-- Minimal boilerplate
-- Works well with server components
-- Simple subscription model
-- Easy to test
-
-### UI/UX Philosophy
-- **Mobile-first**: Bottom navigation, touch-friendly
-- **Dark theme**: Matches competitor aesthetics
-- **Glassmorphism**: Modern, subtle visual style
-- **Micro-animations**: Framer Motion for polish
-
-## Scalability
-
-### Current Capacity
-- Designed for 10,000+ concurrent users
-- Paginated endpoints (20-50 items per page)
-- Indexed queries for sub-100ms responses
-
-### Scaling Strategies
-1. **Database**: Connection pooling, read replicas
-2. **WebSockets**: Hub pattern with goroutine pooling
-3. **Caching**: Redis for session/mood caching (future)
-4. **CDN**: Media assets via CloudFront/Cloudflare
-
-### Performance Optimizations
-- `JSONB` for flexible schema without joins
-- Composite indexes on frequent queries
-- WebSocket message batching
-- Next.js image optimization
-
-## Challenges & Solutions
-
-### Challenge 1: Real-time Chat Synchronization
-**Problem**: Ensuring messages appear in order across WebSocket and REST
-
-**Solution**: Hybrid approach - REST for sending (guaranteed delivery), WebSocket for AI responses (real-time feel). Timestamps for ordering.
-
-### Challenge 2: Story View State
-**Problem**: Tracking viewed status per user without excessive queries
-
-**Solution**: `story_views` junction table with unique constraint. Single query with EXISTS subquery for view status.
-
-### Challenge 3: Mood-Aware Responses
-**Problem**: Making AI responses feel contextually appropriate
-
-**Solution**: Response pools organized by mood type. AI service selects from appropriate pool based on user's current mood setting.
-
-### Challenge 4: Mobile Performance
-**Problem**: Heavy animations on mobile devices
-
-**Solution**: Reduced motion for mobile, lazy-loaded images, optimized Framer Motion animations with `layoutId` for transitions.
-
-## Testing
-
-### Backend Tests
-```bash
-cd backend
-go test ./...
+-- Moods
+moods (id, user_id, mood_type, created_at)
 ```
 
-### Frontend Tests
-```bash
-npm run test
-```
+### Indexes
+- `idx_stories_companion_id` - Fast story retrieval
+- `idx_messages_conversation_id` - Chat pagination
+- `idx_conversations_user_companion` - Session lookup
+- `idx_public_conversations_session` - Public chat lookup
+- `idx_public_messages_conversation` - Public message retrieval
 
 ## Deployment
 
 ### Frontend (Vercel)
-```bash
-vercel deploy
-```
+1. Connect GitHub repository to Vercel
+2. Add environment variables
+3. Deploy automatically on push to main
 
-### Backend (Fly.io)
-```bash
-cd backend
-fly deploy
-```
+### Backend (Render)
+1. Create new Web Service on Render
+2. Connect GitHub repository
+3. Set environment variables:
+   - `ANTHROPIC_API_KEY`
+   - `CLAUDE_MODEL`
+   - `DATABASE_URL`
+   - `JWT_SECRET`
+   - `ALLOWED_ORIGINS`
+4. Deploy automatically on push to main
 
 ## License
 
@@ -443,4 +421,4 @@ MIT License
 
 ---
 
-Built with care for the Nectar.ai engineering team.
+Built with ❤️ using Next.js, Go, and Anthropic Claude
