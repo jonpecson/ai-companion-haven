@@ -1271,3 +1271,105 @@ func (h *Handlers) GetPublicConversations(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.APIResponse{Data: conversations})
 }
+
+// ReseedStories reseeds the stories table with video content
+func (h *Handlers) ReseedStories(c *gin.Context) {
+	// Delete existing stories and re-insert with videos
+	_, err := h.db.Exec(`DELETE FROM stories`)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{Error: "Failed to delete stories: " + err.Error()})
+		return
+	}
+
+	// Insert stories with video support
+	stories := []struct {
+		id          string
+		companionID string
+		mediaURL    string
+		mediaType   string
+		caption     string
+		orderIndex  int
+	}{
+		// Mia Chen (K-pop dancer) - includes video
+		{"mia-story-1", "mia-chen", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/mia.jpg", "image", "Just finished rehearsals! My feet are killing me", 0},
+		{"mia-story-2", "mia-chen", "https://videos.pexels.com/video-files/4873155/4873155-uhd_1440_2560_25fps.mp4", "video", "Late night studio vibes", 1},
+		{"mia-story-3", "mia-chen", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/mia.jpg", "image", "Thinking about you...", 2},
+		{"mia-story-4", "mia-chen", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/mia.jpg", "image", "New choreography coming soon!", 3},
+
+		// Sofia Martinez (Photography) - includes video
+		{"sofia-story-1", "sofia-martinez", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sofia.jpg", "image", "Golden hour is my favorite", 0},
+		{"sofia-story-2", "sofia-martinez", "https://videos.pexels.com/video-files/3015510/3015510-hd_1080_1920_24fps.mp4", "video", "Found the perfect spot for photos!", 1},
+		{"sofia-story-3", "sofia-martinez", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sofia.jpg", "image", "Spontaneous adventure today", 2},
+		{"sofia-story-4", "sofia-martinez", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sofia.jpg", "image", "Miss you already", 3},
+
+		// Emma Laurent (French professor)
+		{"emma-story-1", "emma-laurent", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/emma.jpg", "image", "Lost in a good book tonight", 0},
+		{"emma-story-2", "emma-laurent", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/emma.jpg", "image", "Paris is calling my heart...", 1},
+		{"emma-story-3", "emma-laurent", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/emma.jpg", "image", "Words express the soul", 2},
+
+		// Aria Rose (Yoga)
+		{"aria-story-1", "aria-rose", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/aria.jpg", "image", "Morning meditation complete", 0},
+		{"aria-story-2", "aria-rose", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/aria.jpg", "image", "Find your inner peace", 1},
+		{"aria-story-3", "aria-rose", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/aria.jpg", "image", "Sunset yoga session was magical", 2},
+		{"aria-story-4", "aria-rose", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/aria.jpg", "image", "Thinking of you", 3},
+
+		// Alex Rivera (Startup founder)
+		{"alex-story-1", "alex-rivera", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/alex.jpg", "image", "Another late night at the office", 0},
+		{"alex-story-2", "alex-rivera", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/alex.jpg", "image", "Coffee and dreams", 1},
+		{"alex-story-3", "alex-rivera", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/alex.jpg", "image", "Ready for our weekend trip?", 2},
+
+		// Ryan Kim (Basketball) - includes video
+		{"ryan-story-1", "ryan-kim", "https://videos.pexels.com/video-files/4761438/4761438-uhd_1440_2560_25fps.mp4", "video", "Game day vibes", 0},
+		{"ryan-story-2", "ryan-kim", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/ryan.jpg", "image", "Victory feels sweet!", 1},
+		{"ryan-story-3", "ryan-kim", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/ryan.jpg", "image", "Remember when we used to play as kids?", 2},
+		{"ryan-story-4", "ryan-kim", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/ryan.jpg", "image", "I got you something", 3},
+
+		// Atlas Monroe (Writer)
+		{"atlas-story-1", "atlas-monroe", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/atlas.jpg", "image", "Words flow better at midnight...", 0},
+		{"atlas-story-2", "atlas-monroe", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/atlas.jpg", "image", "Writing about someone special", 1},
+		{"atlas-story-3", "atlas-monroe", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/atlas.jpg", "image", "Every story needs its muse", 2},
+
+		// Kai Nakamura (Surf) - includes videos
+		{"kai-story-1", "kai-nakamura", "https://videos.pexels.com/video-files/1093662/1093662-hd_1920_1080_30fps.mp4", "video", "Perfect waves today!", 0},
+		{"kai-story-2", "kai-nakamura", "https://videos.pexels.com/video-files/1409899/1409899-uhd_2560_1440_25fps.mp4", "video", "Sunset from the beach", 1},
+		{"kai-story-3", "kai-nakamura", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/kai.jpg", "image", "Come surf with me sometime!", 2},
+		{"kai-story-4", "kai-nakamura", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/kai.jpg", "image", "Island life is the best life", 3},
+
+		// Sakura Tanaka (Anime) - includes video
+		{"sakura-story-1", "sakura-tanaka", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sakura.jpg", "image", "Working on my manga!", 0},
+		{"sakura-story-2", "sakura-tanaka", "https://videos.pexels.com/video-files/5699773/5699773-hd_1080_1920_25fps.mp4", "video", "Anime marathon tonight!", 1},
+		{"sakura-story-3", "sakura-tanaka", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sakura.jpg", "image", "Kawaii mood today", 2},
+		{"sakura-story-4", "sakura-tanaka", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sakura.jpg", "image", "You are my favorite senpai!", 3},
+
+		// Luna Nightshade (Mysterious)
+		{"luna-story-1", "luna-nightshade", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/luna.jpg", "image", "The stars whisper secrets...", 0},
+		{"luna-story-2", "luna-nightshade", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/luna.jpg", "image", "Between dimensions tonight", 1},
+		{"luna-story-3", "luna-nightshade", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/luna.jpg", "image", "Do you believe in magic?", 2},
+
+		// Nova Valentine (Tsundere)
+		{"nova-story-1", "nova-valentine", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/nova.jpg", "image", "Student council work never ends...", 0},
+		{"nova-story-2", "nova-valentine", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/nova.jpg", "image", "I-its not like I was thinking of you!", 1},
+		{"nova-story-3", "nova-valentine", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/nova.jpg", "image", "Maybe... I do miss you a little", 2},
+		{"nova-story-4", "nova-valentine", "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/nova.jpg", "image", "Baka...", 3},
+	}
+
+	insertedCount := 0
+	for _, story := range stories {
+		_, err := h.db.Exec(
+			`INSERT INTO stories (id, companion_id, media_url, media_type, caption, order_index, expires_at)
+			VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '24 hours')`,
+			story.id, story.companionID, story.mediaURL, story.mediaType, story.caption, story.orderIndex,
+		)
+		if err == nil {
+			insertedCount++
+		}
+	}
+
+	c.JSON(http.StatusOK, models.APIResponse{
+		Data: map[string]interface{}{
+			"message":  "Stories reseeded successfully",
+			"inserted": insertedCount,
+			"total":    len(stories),
+		},
+	})
+}

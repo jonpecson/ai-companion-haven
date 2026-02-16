@@ -70,8 +70,11 @@ func SetupRoutes(router *gin.Engine, h *Handlers) {
 	api.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",
-			"version": "1.1.0",
+			"version": "1.2.0",
 			"claude":  h.claudeService.IsConfigured(),
 		})
 	})
+
+	// Admin endpoint to reseed stories (with videos)
+	api.POST("/admin/reseed-stories", h.ReseedStories)
 }
