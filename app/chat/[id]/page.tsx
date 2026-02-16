@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Phone, Video, MoreVertical, Info, Heart, Loader2, Camera, PanelLeftClose, PanelLeft } from "lucide-react";
+import { ArrowLeft, MoreVertical, Info, Heart, Loader2, Camera, PanelLeftClose, PanelLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useAppStore, useMood } from "@/lib/store";
 import { companionsApi, chatApi, imagesApi } from "@/lib/api";
@@ -313,18 +313,6 @@ export default function ChatPage() {
               title="Request photo"
             >
               <Camera size={18} className="lg:w-5 lg:h-5" />
-            </button>
-            <button
-              onClick={() => toast.info("Voice calls coming soon!")}
-              className="hidden sm:flex p-2 lg:p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"
-            >
-              <Phone size={18} className="lg:w-5 lg:h-5" />
-            </button>
-            <button
-              onClick={() => toast.info("Video calls coming soon!")}
-              className="hidden sm:flex p-2 lg:p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"
-            >
-              <Video size={18} className="lg:w-5 lg:h-5" />
             </button>
             <button
               onClick={() => setShowInfo(!showInfo)}
