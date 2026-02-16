@@ -67,6 +67,7 @@ export default function ChatPage() {
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasLoadedHistory = useRef(false);
 
   const companionId = params.id as string;
 
@@ -85,26 +86,29 @@ export default function ChatPage() {
           createdAt: new Date().toISOString(),
         });
 
-        // Load chat history from database if local storage is empty
-        const localMessages = messages[companionId] || [];
-        if (localMessages.length === 0) {
-          try {
-            const sessionId = getSessionId();
-            const historyResponse = await chatApi.getPublicHistory(companionId, sessionId);
-            if (historyResponse.data && historyResponse.data.length > 0) {
-              // Convert API response to Message format
-              const dbMessages: Message[] = historyResponse.data.map((msg: { id: string; sender: string; content: string; imageUrl?: string; createdAt: string }) => ({
-                id: msg.id,
-                conversationId: `conv-${companionId}`,
-                sender: msg.sender as "user" | "ai",
-                content: msg.content,
-                imageUrl: msg.imageUrl,
-                createdAt: msg.createdAt,
-              }));
-              setMessages(companionId, dbMessages);
+        // Load chat history from database only once and if local storage is empty
+        if (!hasLoadedHistory.current) {
+          hasLoadedHistory.current = true;
+          const localMessages = useAppStore.getState().messages[companionId] || [];
+          if (localMessages.length === 0) {
+            try {
+              const sessionId = getSessionId();
+              const historyResponse = await chatApi.getPublicHistory(companionId, sessionId);
+              if (historyResponse.data && historyResponse.data.length > 0) {
+                // Convert API response to Message format
+                const dbMessages: Message[] = historyResponse.data.map((msg: { id: string; sender: string; content: string; imageUrl?: string; createdAt: string }) => ({
+                  id: msg.id,
+                  conversationId: `conv-${companionId}`,
+                  sender: msg.sender as "user" | "ai",
+                  content: msg.content,
+                  imageUrl: msg.imageUrl,
+                  createdAt: msg.createdAt,
+                }));
+                setMessages(companionId, dbMessages);
+              }
+            } catch {
+              // Database fetch failed - continue with local storage
             }
-          } catch {
-            // Database fetch failed - continue with local storage
           }
         }
       } catch {
@@ -115,7 +119,7 @@ export default function ChatPage() {
     };
 
     fetchCompanionAndHistory();
-  }, [companionId, addConversation, messages, setMessages]);
+  }, [companionId, addConversation, setMessages]);
 
   const chatMessages = messages[companionId] || [];
 
