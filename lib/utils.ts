@@ -32,3 +32,18 @@ export function formatRelativeTime(date: string | Date): string {
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
+
+// Get or create a persistent session ID for anonymous users
+export function getSessionId(): string {
+  if (typeof window === "undefined") return "server";
+
+  const STORAGE_KEY = "nectar-session-id";
+  let sessionId = localStorage.getItem(STORAGE_KEY);
+
+  if (!sessionId) {
+    sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    localStorage.setItem(STORAGE_KEY, sessionId);
+  }
+
+  return sessionId;
+}

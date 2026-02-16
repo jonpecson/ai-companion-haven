@@ -123,6 +123,31 @@ export const chatApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  // Public chat persistence (no auth required)
+  savePublicMessages: (data: {
+    sessionId: string;
+    companionId: string;
+    messages: Array<{
+      id: string;
+      sender: string;
+      content: string;
+      imageUrl?: string;
+      createdAt: string;
+    }>;
+  }) =>
+    fetchApi<ApiResponse<{ saved: number; conversationId: string }>>("/api/chat/public/save", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getPublicHistory: (companionId: string, sessionId: string) =>
+    fetchApi<ApiResponse<Message[]>>(`/api/chat/public/history/${companionId}?sessionId=${sessionId}`),
+
+  getPublicConversations: (sessionId: string) =>
+    fetchApi<ApiResponse<Array<{ id: string; companionId: string; lastMessage?: string; lastMessageAt?: string }>>>(
+      `/api/chat/public/conversations?sessionId=${sessionId}`
+    ),
 };
 
 // Memories API

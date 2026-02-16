@@ -142,6 +142,25 @@ func RunMigrations(db *sql.DB) error {
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 		)`,
 
+		// Public conversations table (for demo without auth)
+		`CREATE TABLE IF NOT EXISTS public_conversations (
+			id TEXT PRIMARY KEY,
+			session_id TEXT NOT NULL,
+			companion_id TEXT NOT NULL,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE(session_id, companion_id)
+		)`,
+
+		// Public messages table (for demo without auth)
+		`CREATE TABLE IF NOT EXISTS public_messages (
+			id TEXT PRIMARY KEY,
+			conversation_id TEXT NOT NULL REFERENCES public_conversations(id) ON DELETE CASCADE,
+			sender VARCHAR(20) NOT NULL CHECK (sender IN ('user', 'ai')),
+			content TEXT NOT NULL,
+			image_url TEXT,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		)`,
+
 		// Indexes
 		`CREATE INDEX IF NOT EXISTS idx_stories_companion_id ON stories(companion_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_story_views_user_id ON story_views(user_id)`,
@@ -149,6 +168,8 @@ func RunMigrations(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_conversations_user_companion ON conversations(user_id, companion_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_memories_user_id ON memories(user_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_moods_user_id ON moods(user_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_public_conversations_session ON public_conversations(session_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_public_messages_conversation ON public_messages(conversation_id)`,
 	}
 
 	for _, migration := range migrations {

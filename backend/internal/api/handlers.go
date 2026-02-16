@@ -1094,3 +1094,180 @@ func (h *Handlers) GenerateCompanionPhoto(c *gin.Context) {
 		},
 	})
 }
+
+// Public Chat Persistence Handlers (no auth required for demo)
+
+// SavePublicMessage saves messages for public/demo chat
+func (h *Handlers) SavePublicMessage(c *gin.Context) {
+	var req struct {
+		SessionID   string `json:"sessionId" binding:"required"`
+		CompanionID string `json:"companionId" binding:"required"`
+		Messages    []struct {
+			ID        string  `json:"id" binding:"required"`
+			Sender    string  `json:"sender" binding:"required"`
+			Content   string  `json:"content"`
+			ImageURL  *string `json:"imageUrl"`
+			CreatedAt string  `json:"createdAt" binding:"required"`
+		} `json:"messages" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.APIResponse{Error: err.Error()})
+		return
+	}
+
+	// Create or get conversation
+	convID := req.SessionID + "-" + req.CompanionID
+
+	_, err := h.db.Exec(
+		`INSERT INTO public_conversations (id, session_id, companion_id)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (session_id, companion_id) DO NOTHING`,
+		convID, req.SessionID, req.CompanionID,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{Error: err.Error()})
+		return
+	}
+
+	// Insert messages
+	for _, msg := range req.Messages {
+		_, err := h.db.Exec(
+			`INSERT INTO public_messages (id, conversation_id, sender, content, image_url, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6)
+			ON CONFLICT (id) DO UPDATE SET content = $4, image_url = $5`,
+			msg.ID, convID, msg.Sender, msg.Content, msg.ImageURL, msg.CreatedAt,
+		)
+		if err != nil {
+			// Log but continue
+			continue
+		}
+	}
+
+	c.JSON(http.StatusOK, models.APIResponse{Data: map[string]interface{}{
+		"saved":          len(req.Messages),
+		"conversationId": convID,
+	}})
+}
+
+// GetPublicChatHistory retrieves chat history for a public session
+func (h *Handlers) GetPublicChatHistory(c *gin.Context) {
+	sessionID := c.Query("sessionId")
+	companionID := c.Param("companionId")
+
+	if sessionID == "" {
+		c.JSON(http.StatusBadRequest, models.APIResponse{Error: "sessionId is required"})
+		return
+	}
+
+	convID := sessionID + "-" + companionID
+
+	// Check if conversation exists
+	var exists bool
+	err := h.db.QueryRow(
+		`SELECT EXISTS(SELECT 1 FROM public_conversations WHERE id = $1)`,
+		convID,
+	).Scan(&exists)
+
+	if err != nil || !exists {
+		// Return empty array if no conversation
+		c.JSON(http.StatusOK, models.APIResponse{Data: []interface{}{}})
+		return
+	}
+
+	// Get messages
+	rows, err := h.db.Query(
+		`SELECT id, sender, content, image_url, created_at
+		FROM public_messages WHERE conversation_id = $1
+		ORDER BY created_at ASC`,
+		convID,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{Error: err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var messages []map[string]interface{}
+	for rows.Next() {
+		var id, sender, content string
+		var imageURL *string
+		var createdAt time.Time
+
+		if err := rows.Scan(&id, &sender, &content, &imageURL, &createdAt); err != nil {
+			continue
+		}
+
+		msg := map[string]interface{}{
+			"id":        id,
+			"sender":    sender,
+			"content":   content,
+			"createdAt": createdAt.Format(time.RFC3339),
+		}
+		if imageURL != nil {
+			msg["imageUrl"] = *imageURL
+		}
+		messages = append(messages, msg)
+	}
+
+	if messages == nil {
+		messages = []map[string]interface{}{}
+	}
+
+	c.JSON(http.StatusOK, models.APIResponse{Data: messages})
+}
+
+// GetPublicConversations retrieves all conversations for a session
+func (h *Handlers) GetPublicConversations(c *gin.Context) {
+	sessionID := c.Query("sessionId")
+
+	if sessionID == "" {
+		c.JSON(http.StatusBadRequest, models.APIResponse{Error: "sessionId is required"})
+		return
+	}
+
+	rows, err := h.db.Query(
+		`SELECT pc.id, pc.companion_id, pc.created_at,
+			(SELECT content FROM public_messages WHERE conversation_id = pc.id ORDER BY created_at DESC LIMIT 1) as last_message,
+			(SELECT created_at FROM public_messages WHERE conversation_id = pc.id ORDER BY created_at DESC LIMIT 1) as last_message_at
+		FROM public_conversations pc
+		WHERE pc.session_id = $1
+		ORDER BY last_message_at DESC NULLS LAST`,
+		sessionID,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.APIResponse{Error: err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var conversations []map[string]interface{}
+	for rows.Next() {
+		var id, companionID string
+		var createdAt time.Time
+		var lastMessage, lastMessageAt *string
+
+		if err := rows.Scan(&id, &companionID, &createdAt, &lastMessage, &lastMessageAt); err != nil {
+			continue
+		}
+
+		conv := map[string]interface{}{
+			"id":          id,
+			"companionId": companionID,
+			"createdAt":   createdAt.Format(time.RFC3339),
+		}
+		if lastMessage != nil {
+			conv["lastMessage"] = *lastMessage
+		}
+		if lastMessageAt != nil {
+			conv["lastMessageAt"] = *lastMessageAt
+		}
+		conversations = append(conversations, conv)
+	}
+
+	if conversations == nil {
+		conversations = []map[string]interface{}{}
+	}
+
+	c.JSON(http.StatusOK, models.APIResponse{Data: conversations})
+}

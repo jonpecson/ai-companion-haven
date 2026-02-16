@@ -42,8 +42,11 @@ func SetupRoutes(router *gin.Engine, h *Handlers) {
 		chat.GET("/history/:companionId", h.GetChatHistory)
 	}
 
-	// Public chat route (for demo/testing without auth)
+	// Public chat routes (for demo/testing without auth)
 	api.POST("/chat/public", h.PublicChat)
+	api.POST("/chat/public/save", h.SavePublicMessage)
+	api.GET("/chat/public/history/:companionId", h.GetPublicChatHistory)
+	api.GET("/chat/public/conversations", h.GetPublicConversations)
 
 	// Image generation routes (public for demo)
 	api.POST("/images/generate", h.GenerateCompanionPhoto)

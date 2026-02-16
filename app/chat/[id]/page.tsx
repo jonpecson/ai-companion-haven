@@ -13,7 +13,7 @@ import { MessageBubble } from "@/components/chat/MessageBubble";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ConversationList } from "@/components/chat/ConversationList";
-import { generateId } from "@/lib/utils";
+import { generateId, getSessionId } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import type { Message, MoodType, Companion, PhotoType } from "@/types";
 
@@ -68,7 +68,7 @@ export default function ChatPage() {
   const companionId = params.id as string;
 
   useEffect(() => {
-    const fetchCompanion = async () => {
+    const fetchCompanionAndHistory = async () => {
       try {
         setLoading(true);
         const response = await companionsApi.get(companionId);
@@ -81,6 +81,29 @@ export default function ChatPage() {
           companion: response.data,
           createdAt: new Date().toISOString(),
         });
+
+        // Load chat history from database if local storage is empty
+        const localMessages = messages[companionId] || [];
+        if (localMessages.length === 0) {
+          try {
+            const sessionId = getSessionId();
+            const historyResponse = await chatApi.getPublicHistory(companionId, sessionId);
+            if (historyResponse.data && historyResponse.data.length > 0) {
+              // Convert API response to Message format
+              const dbMessages: Message[] = historyResponse.data.map((msg: { id: string; sender: string; content: string; imageUrl?: string; createdAt: string }) => ({
+                id: msg.id,
+                conversationId: `conv-${companionId}`,
+                sender: msg.sender as "user" | "ai",
+                content: msg.content,
+                imageUrl: msg.imageUrl,
+                createdAt: msg.createdAt,
+              }));
+              setMessages(companionId, dbMessages);
+            }
+          } catch {
+            // Database fetch failed - continue with local storage
+          }
+        }
       } catch {
         // Companion fetch failed - handled by loading state
       } finally {
@@ -88,8 +111,8 @@ export default function ChatPage() {
       }
     };
 
-    fetchCompanion();
-  }, [companionId, addConversation]);
+    fetchCompanionAndHistory();
+  }, [companionId, addConversation, messages, setMessages]);
 
   const chatMessages = messages[companionId] || [];
 
@@ -208,6 +231,30 @@ export default function ChatPage() {
             icon: wantsPhoto ? "image" : "message-circle",
           },
           createdAt: new Date().toISOString(),
+        });
+
+        // Save messages to database (async, don't wait)
+        const sessionId = getSessionId();
+        chatApi.savePublicMessages({
+          sessionId,
+          companionId,
+          messages: [
+            {
+              id: userMessage.id,
+              sender: userMessage.sender,
+              content: userMessage.content,
+              imageUrl: userMessage.imageUrl,
+              createdAt: userMessage.createdAt,
+            },
+            {
+              id: aiMessageId,
+              sender: "ai",
+              content: response.data?.response || "",
+              createdAt: new Date().toISOString(),
+            },
+          ],
+        }).catch(() => {
+          // Database save failed - messages are still in local storage
         });
       } catch {
         // AI response failed - show fallback message
