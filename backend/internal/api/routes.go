@@ -16,12 +16,12 @@ func SetupRoutes(router *gin.Engine, h *Handlers) {
 		auth.GET("/me", AuthMiddleware(h.authService), h.GetMe)
 	}
 
-	// Companions routes (public list, protected create)
+	// Companions routes (all public for demo)
 	companions := api.Group("/companions")
 	{
 		companions.GET("", h.ListCompanions)
 		companions.GET("/:id", h.GetCompanion)
-		companions.POST("/custom", AuthMiddleware(h.authService), h.CreateCompanion)
+		companions.POST("/custom", h.CreateCompanion) // Public for demo
 	}
 
 	// Stories routes (protected)

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -211,14 +212,44 @@ func (h *Handlers) GetCompanion(c *gin.Context) {
 }
 
 func (h *Handlers) CreateCompanion(c *gin.Context) {
-	var req models.CreateCompanionRequest
+	var req struct {
+		Name               string             `json:"name" binding:"required"`
+		Category           string             `json:"category" binding:"required,oneof=girls guys anime"`
+		Bio                string             `json:"bio"`
+		AvatarURL          string             `json:"avatarUrl"`
+		Personality        models.Personality `json:"personality"`
+		Tags               []string           `json:"tags"`
+		Age                int                `json:"age" binding:"required,min=18,max=100"`
+		Greeting           string             `json:"greeting"`
+		Scenario           string             `json:"scenario"`
+		CommunicationStyle string             `json:"communicationStyle"`
+		Interests          []string           `json:"interests"`
+		Appearance         map[string]string  `json:"appearance"`
+	}
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, models.APIResponse{Error: err.Error()})
 		return
 	}
 
+	// Generate readable ID from name
+	id := generateSlug(req.Name)
+
+	// Check if ID already exists, append random suffix if so
+	var existingID string
+	err := h.db.QueryRow("SELECT id FROM companions WHERE id = $1", id).Scan(&existingID)
+	if err == nil {
+		// ID exists, append random suffix
+		id = id + "-" + uuid.New().String()[:8]
+	}
+
+	// Set defaults
+	if req.CommunicationStyle == "" {
+		req.CommunicationStyle = "friendly"
+	}
+
 	comp := models.Companion{
-		ID:        uuid.New().String(),
+		ID:        id,
 		Name:      req.Name,
 		Category:  req.Category,
 		Bio:       req.Bio,
@@ -230,16 +261,34 @@ func (h *Handlers) CreateCompanion(c *gin.Context) {
 			"romantic":     req.Personality.Romantic,
 			"flirty":       req.Personality.Flirty,
 		},
-		Tags:   req.Tags,
-		Age:    req.Age,
-		Status: "online",
+		Tags:               req.Tags,
+		Age:                req.Age,
+		Status:             "online",
+		CommunicationStyle: req.CommunicationStyle,
+		Interests:          req.Interests,
+		CreatedAt:          time.Now(),
 	}
 
-	_, err := h.db.Exec(
-		`INSERT INTO companions (id, name, category, bio, avatar_url, personality_json, tags, age, status)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+	// Handle optional fields
+	if req.Greeting != "" {
+		comp.Greeting = &req.Greeting
+	}
+	if req.Scenario != "" {
+		comp.Scenario = &req.Scenario
+	}
+	if req.Appearance != nil {
+		comp.AppearanceJSON = models.JSONB{}
+		for k, v := range req.Appearance {
+			comp.AppearanceJSON[k] = v
+		}
+	}
+
+	_, err = h.db.Exec(
+		`INSERT INTO companions (id, name, category, bio, avatar_url, personality_json, tags, age, status, greeting, scenario, communication_style, interests, appearance_json)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
 		comp.ID, comp.Name, comp.Category, comp.Bio, comp.AvatarURL,
 		comp.PersonalityJSON, pq.Array(comp.Tags), comp.Age, comp.Status,
+		comp.Greeting, comp.Scenario, comp.CommunicationStyle, pq.Array(comp.Interests), comp.AppearanceJSON,
 	)
 
 	if err != nil {
@@ -248,6 +297,33 @@ func (h *Handlers) CreateCompanion(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, models.APIResponse{Data: comp})
+}
+
+// generateSlug creates a URL-friendly slug from a name
+func generateSlug(name string) string {
+	// Convert to lowercase
+	slug := strings.ToLower(name)
+	// Replace spaces with hyphens
+	slug = strings.ReplaceAll(slug, " ", "-")
+	// Remove non-alphanumeric characters except hyphens
+	var result strings.Builder
+	for _, r := range slug {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
+			result.WriteRune(r)
+		}
+	}
+	slug = result.String()
+	// Remove multiple consecutive hyphens
+	for strings.Contains(slug, "--") {
+		slug = strings.ReplaceAll(slug, "--", "-")
+	}
+	// Trim hyphens from start and end
+	slug = strings.Trim(slug, "-")
+	// Add prefix
+	if slug == "" {
+		slug = "companion-" + uuid.New().String()[:8]
+	}
+	return slug
 }
 
 // Story Handlers
