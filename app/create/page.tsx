@@ -38,16 +38,17 @@ const steps: { id: Step; title: string; icon: React.ElementType }[] = [
 ];
 
 const avatarOptions = [
-  { url: "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/mia.jpg", name: "Mia" },
-  { url: "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sofia.jpg", name: "Sofia" },
-  { url: "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/emma.jpg", name: "Emma" },
-  { url: "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/aria.jpg", name: "Aria" },
-  { url: "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/alex.jpg", name: "Alex" },
-  { url: "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/ryan.jpg", name: "Ryan" },
-  { url: "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/kai.jpg", name: "Kai" },
-  { url: "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sakura.jpg", name: "Sakura" },
-  { url: "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/luna.jpg", name: "Luna" },
-  { url: "https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/nova.jpg", name: "Nova" },
+  { url: "/images/companions/mia.jpg", name: "Mia" },
+  { url: "/images/companions/sofia.jpg", name: "Sofia" },
+  { url: "/images/companions/emma.jpg", name: "Emma" },
+  { url: "/images/companions/aria.jpg", name: "Aria" },
+  { url: "/images/companions/alex.jpg", name: "Alex" },
+  { url: "/images/companions/ryan.jpg", name: "Ryan" },
+  { url: "/images/companions/atlas.jpg", name: "Atlas" },
+  { url: "/images/companions/kai.jpg", name: "Kai" },
+  { url: "/images/companions/sakura.jpg", name: "Sakura" },
+  { url: "/images/companions/luna.jpg", name: "Luna" },
+  { url: "/images/companions/nova.jpg", name: "Nova" },
 ];
 
 const suggestedTags = [
