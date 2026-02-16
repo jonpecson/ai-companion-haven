@@ -55,7 +55,7 @@ function isPhotoRequest(message: string): boolean {
 export default function ChatPage() {
   const params = useParams();
   const router = useRouter();
-  const { messages, setMessages, addMessage, updateMessage, addConversation } = useAppStore();
+  const { messages, setMessages, addMessage, updateMessage, addConversation, addMemory } = useAppStore();
   const currentMood = useMood();
   const [isTyping, setIsTyping] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -194,6 +194,21 @@ export default function ChatPage() {
           };
           addMessage(companionId, aiMessage);
         }
+
+        // Add memory for this chat interaction
+        addMemory({
+          id: `mem-${generateId()}`,
+          userId: "user1",
+          companionId,
+          eventType: wantsPhoto ? "chat" : "chat",
+          metadata: {
+            content: wantsPhoto
+              ? `${companion.name} sent you a photo`
+              : `You chatted with ${companion.name}`,
+            icon: wantsPhoto ? "image" : "message-circle",
+          },
+          createdAt: new Date().toISOString(),
+        });
       } catch {
         // AI response failed - show fallback message
         const aiMessage: Message = {
@@ -209,7 +224,7 @@ export default function ChatPage() {
         setIsGeneratingImage(false);
       }
     },
-    [companion, companionId, addMessage, chatMessages, currentMood, generatePhoto]
+    [companion, companionId, addMessage, addMemory, chatMessages, currentMood, generatePhoto]
   );
 
   // Request photo button handler

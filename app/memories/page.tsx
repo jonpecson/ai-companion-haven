@@ -108,9 +108,11 @@ export default function MemoriesPage() {
         const companionData = response.data || [];
         setCompanions(companionData);
 
-        // Generate memories based on real companions
-        const generatedMemories = generateMemories(companionData);
-        setMemories(generatedMemories);
+        // Only generate placeholder memories if there are no real memories yet
+        if (memories.length === 0) {
+          const generatedMemories = generateMemories(companionData);
+          setMemories(generatedMemories);
+        }
       } catch {
         // Error handled silently
       } finally {
@@ -119,7 +121,7 @@ export default function MemoriesPage() {
     };
 
     fetchData();
-  }, [setCompanions, setMemories]);
+  }, [setCompanions, setMemories, memories.length]);
 
   // Group memories by date
   const groupedMemories = memories.reduce(

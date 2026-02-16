@@ -33,6 +33,7 @@ interface AppState {
   updateConversation: (companionId: string, updates: Partial<Conversation>) => void;
   setActiveConversation: (conversationId: string | null) => void;
   setMemories: (memories: Memory[]) => void;
+  addMemory: (memory: Memory) => void;
   setMood: (mood: MoodType) => void;
   setLoading: (loading: boolean) => void;
 }
@@ -71,11 +72,33 @@ export const useAppStore = create<AppState>((set, get) => ({
   setStories: (stories) => set({ stories }),
 
   markStoryViewed: (storyId) =>
-    set((state) => ({
-      stories: state.stories.map((s) =>
-        s.id === storyId ? { ...s, viewed: true } : s
-      ),
-    })),
+    set((state) => {
+      const story = state.stories.find((s) => s.id === storyId);
+      const companion = story ? state.companions.find((c) => c.id === story.companionId) : null;
+
+      // Add memory for viewing this story (only if not already viewed)
+      const existingStory = state.stories.find((s) => s.id === storyId);
+      const newMemory = existingStory && !existingStory.viewed && companion
+        ? {
+            id: `mem-story-${storyId}-${Date.now()}`,
+            userId: "user1",
+            companionId: story!.companionId,
+            eventType: "story_view" as const,
+            metadata: {
+              content: `You viewed ${companion.name}'s story`,
+              icon: "image",
+            },
+            createdAt: new Date().toISOString(),
+          }
+        : null;
+
+      return {
+        stories: state.stories.map((s) =>
+          s.id === storyId ? { ...s, viewed: true } : s
+        ),
+        memories: newMemory ? [newMemory, ...state.memories] : state.memories,
+      };
+    }),
 
   setMessages: (companionId, messages) =>
     set((state) => ({
@@ -128,6 +151,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   setActiveConversation: (conversationId) => set({ activeConversationId: conversationId }),
 
   setMemories: (memories) => set({ memories }),
+
+  addMemory: (memory) =>
+    set((state) => ({
+      memories: [memory, ...state.memories],
+    })),
 
   setMood: (mood) => set({ currentMood: mood }),
 
