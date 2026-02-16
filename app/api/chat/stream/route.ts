@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL || "https://nectar-ai-backend.onrender.com";
+const BACKEND_URL = process.env.BACKEND_URL || "https://ai-companion-haven.onrender.com";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +15,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Call the backend API to get the AI response
+    console.log(`[Stream] Calling backend: ${BACKEND_URL}/api/chat/public`);
+
     const backendResponse = await fetch(`${BACKEND_URL}/api/chat/public`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -27,10 +29,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!backendResponse.ok) {
-      throw new Error(`Backend returned ${backendResponse.status}`);
+      const errorText = await backendResponse.text();
+      console.error(`[Stream] Backend error ${backendResponse.status}:`, errorText);
+      throw new Error(`Backend returned ${backendResponse.status}: ${errorText}`);
     }
 
     const data = await backendResponse.json();
+    console.log(`[Stream] Got response from backend:`, data.data?.response?.substring(0, 50));
     const fullResponse = data.data?.response || "Hey there! I'm happy to chat with you.";
     const companionName = data.data?.companion || "AI Companion";
 
