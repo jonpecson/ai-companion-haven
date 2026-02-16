@@ -134,17 +134,17 @@ INSERT INTO companions (id, name, category, bio, avatar_url, personality_json, t
 
 -- Insert stories for all companions (3-5 stories each)
 
--- Mia Chen stories (K-pop dancer)
+-- Mia Chen stories (K-pop dancer) - includes video
 INSERT INTO stories (id, companion_id, media_url, media_type, caption, order_index, expires_at) VALUES
 ('mia-story-1', 'mia-chen', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/mia.jpg', 'image', 'Just finished rehearsals! My feet are killing me 💃', 0, NOW() + INTERVAL '24 hours'),
-('mia-story-2', 'mia-chen', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/mia.jpg', 'image', 'Late night studio vibes 🌙', 1, NOW() + INTERVAL '24 hours'),
+('mia-story-2', 'mia-chen', 'https://videos.pexels.com/video-files/4873155/4873155-uhd_1440_2560_25fps.mp4', 'video', 'Late night studio vibes 🌙', 1, NOW() + INTERVAL '24 hours'),
 ('mia-story-3', 'mia-chen', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/mia.jpg', 'image', 'Thinking about you... 💭', 2, NOW() + INTERVAL '24 hours'),
 ('mia-story-4', 'mia-chen', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/mia.jpg', 'image', 'New choreography coming soon! 🔥', 3, NOW() + INTERVAL '24 hours');
 
--- Sofia Martinez stories (Photography student)
+-- Sofia Martinez stories (Photography student) - includes video
 INSERT INTO stories (id, companion_id, media_url, media_type, caption, order_index, expires_at) VALUES
 ('sofia-story-1', 'sofia-martinez', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sofia.jpg', 'image', 'Golden hour is my favorite 📸', 0, NOW() + INTERVAL '24 hours'),
-('sofia-story-2', 'sofia-martinez', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sofia.jpg', 'image', 'Found the perfect spot for photos!', 1, NOW() + INTERVAL '24 hours'),
+('sofia-story-2', 'sofia-martinez', 'https://videos.pexels.com/video-files/3015510/3015510-hd_1080_1920_24fps.mp4', 'video', 'Found the perfect spot for photos!', 1, NOW() + INTERVAL '24 hours'),
 ('sofia-story-3', 'sofia-martinez', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sofia.jpg', 'image', 'Spontaneous adventure today 🌸', 2, NOW() + INTERVAL '24 hours'),
 ('sofia-story-4', 'sofia-martinez', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sofia.jpg', 'image', 'Miss you already 💕', 3, NOW() + INTERVAL '24 hours');
 
@@ -167,9 +167,9 @@ INSERT INTO stories (id, companion_id, media_url, media_type, caption, order_ind
 ('alex-story-2', 'alex-rivera', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/alex.jpg', 'image', 'Coffee and dreams ☕', 1, NOW() + INTERVAL '24 hours'),
 ('alex-story-3', 'alex-rivera', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/alex.jpg', 'image', 'Ready for our weekend trip?', 2, NOW() + INTERVAL '24 hours');
 
--- Ryan Kim stories (Basketball player)
+-- Ryan Kim stories (Basketball player) - includes video
 INSERT INTO stories (id, companion_id, media_url, media_type, caption, order_index, expires_at) VALUES
-('ryan-story-1', 'ryan-kim', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/ryan.jpg', 'image', 'Game day vibes 🏀', 0, NOW() + INTERVAL '24 hours'),
+('ryan-story-1', 'ryan-kim', 'https://videos.pexels.com/video-files/4761438/4761438-uhd_1440_2560_25fps.mp4', 'video', 'Game day vibes 🏀', 0, NOW() + INTERVAL '24 hours'),
 ('ryan-story-2', 'ryan-kim', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/ryan.jpg', 'image', 'Victory feels sweet! 🏆', 1, NOW() + INTERVAL '24 hours'),
 ('ryan-story-3', 'ryan-kim', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/ryan.jpg', 'image', 'Remember when we used to play as kids?', 2, NOW() + INTERVAL '24 hours'),
 ('ryan-story-4', 'ryan-kim', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/ryan.jpg', 'image', 'I got you something 🎁', 3, NOW() + INTERVAL '24 hours');
@@ -180,17 +180,17 @@ INSERT INTO stories (id, companion_id, media_url, media_type, caption, order_ind
 ('atlas-story-2', 'atlas-monroe', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/atlas.jpg', 'image', 'Writing about someone special ✍️', 1, NOW() + INTERVAL '24 hours'),
 ('atlas-story-3', 'atlas-monroe', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/atlas.jpg', 'image', 'Every story needs its muse', 2, NOW() + INTERVAL '24 hours');
 
--- Kai Nakamura stories (Surf instructor)
+-- Kai Nakamura stories (Surf instructor) - includes videos
 INSERT INTO stories (id, companion_id, media_url, media_type, caption, order_index, expires_at) VALUES
-('kai-story-1', 'kai-nakamura', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/kai.jpg', 'image', 'Perfect waves today! 🌊', 0, NOW() + INTERVAL '24 hours'),
-('kai-story-2', 'kai-nakamura', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/kai.jpg', 'image', 'Sunset from the beach 🌅', 1, NOW() + INTERVAL '24 hours'),
+('kai-story-1', 'kai-nakamura', 'https://videos.pexels.com/video-files/1093662/1093662-hd_1920_1080_30fps.mp4', 'video', 'Perfect waves today! 🌊', 0, NOW() + INTERVAL '24 hours'),
+('kai-story-2', 'kai-nakamura', 'https://videos.pexels.com/video-files/1409899/1409899-uhd_2560_1440_25fps.mp4', 'video', 'Sunset from the beach 🌅', 1, NOW() + INTERVAL '24 hours'),
 ('kai-story-3', 'kai-nakamura', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/kai.jpg', 'image', 'Come surf with me sometime!', 2, NOW() + INTERVAL '24 hours'),
 ('kai-story-4', 'kai-nakamura', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/kai.jpg', 'image', 'Island life is the best life 🌴', 3, NOW() + INTERVAL '24 hours');
 
--- Sakura Tanaka stories (Anime club president)
+-- Sakura Tanaka stories (Anime club president) - includes video
 INSERT INTO stories (id, companion_id, media_url, media_type, caption, order_index, expires_at) VALUES
 ('sakura-story-1', 'sakura-tanaka', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sakura.jpg', 'image', 'Working on my manga! ✏️', 0, NOW() + INTERVAL '24 hours'),
-('sakura-story-2', 'sakura-tanaka', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sakura.jpg', 'image', 'Anime marathon tonight! 🎬', 1, NOW() + INTERVAL '24 hours'),
+('sakura-story-2', 'sakura-tanaka', 'https://videos.pexels.com/video-files/5699773/5699773-hd_1080_1920_25fps.mp4', 'video', 'Anime marathon tonight! 🎬', 1, NOW() + INTERVAL '24 hours'),
 ('sakura-story-3', 'sakura-tanaka', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sakura.jpg', 'image', 'Kawaii mood today 🌸', 2, NOW() + INTERVAL '24 hours'),
 ('sakura-story-4', 'sakura-tanaka', 'https://nectar-ai-media.s3.ap-southeast-1.amazonaws.com/images/companions/sakura.jpg', 'image', 'You are my favorite senpai! 💖', 3, NOW() + INTERVAL '24 hours');
 

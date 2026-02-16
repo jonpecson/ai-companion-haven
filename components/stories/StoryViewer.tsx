@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Volume2, VolumeX } from "lucide-react";
 import type { Story, Companion } from "@/types";
 
 interface StoryViewerProps {
@@ -30,9 +30,13 @@ export function StoryViewer({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const story = stories[currentIndex];
-  const duration = 5000; // 5 seconds per story
+  const isVideo = story?.type === "video";
+  const duration = isVideo && videoDuration ? videoDuration * 1000 : 5000; // Use video duration or 5 seconds for images
 
   // Use refs to avoid timer restarts when callbacks change
   const storiesLengthRef = useRef(stories.length);
@@ -55,7 +59,19 @@ export function StoryViewer({
   useEffect(() => {
     setCurrentIndex(0);
     setProgress(0);
+    setVideoDuration(null);
   }, [stories]);
+
+  // Handle video pause/play
+  useEffect(() => {
+    if (videoRef.current && isVideo) {
+      if (isPaused) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play().catch(() => {});
+      }
+    }
+  }, [isPaused, isVideo]);
 
   const goNext = useCallback(() => {
     setCurrentIndex((prev) => {
@@ -97,22 +113,32 @@ export function StoryViewer({
   useEffect(() => {
     if (isPaused) return;
 
+    // For videos, wait until we have the duration
+    if (isVideo && !videoDuration) return;
+
     setProgress(0);
     const startTime = Date.now();
+    const storyDuration = isVideo && videoDuration ? videoDuration * 1000 : 5000;
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const newProgress = Math.min((elapsed / duration) * 100, 100);
+      const newProgress = Math.min((elapsed / storyDuration) * 100, 100);
       setProgress(newProgress);
 
-      if (newProgress >= 100) {
+      // For images, auto-advance. For videos, let the onEnded handler do it
+      if (newProgress >= 100 && !isVideo) {
         clearInterval(interval);
         goNext();
       }
     }, 50);
 
     return () => clearInterval(interval);
-  }, [currentIndex, isPaused, goNext]);
+  }, [currentIndex, isPaused, goNext, isVideo, videoDuration]);
+
+  // Reset video duration when story changes
+  useEffect(() => {
+    setVideoDuration(null);
+  }, [currentIndex]);
 
   const handleTap = (e: React.MouseEvent) => {
     const x = e.clientX;
@@ -233,11 +259,18 @@ export function StoryViewer({
           >
             {story.type === "video" ? (
               <video
+                ref={videoRef}
                 src={story.mediaUrl}
                 className="w-full h-full object-cover"
                 autoPlay
-                muted
+                muted={isMuted}
                 playsInline
+                loop={false}
+                onLoadedMetadata={(e) => {
+                  const video = e.target as HTMLVideoElement;
+                  setVideoDuration(video.duration);
+                }}
+                onEnded={goNext}
               />
             ) : (
               <Image
@@ -250,6 +283,19 @@ export function StoryViewer({
               />
             )}
           </motion.div>
+
+          {/* Video mute/unmute button */}
+          {isVideo && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMuted(!isMuted);
+              }}
+              className="absolute bottom-24 right-4 z-10 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+            >
+              {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </button>
+          )}
 
           {/* Caption */}
           {story.caption && (

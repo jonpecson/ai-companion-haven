@@ -17,6 +17,7 @@ A full-stack AI Companion web application featuring AI-powered conversations wit
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
 - [Database Schema](#database-schema)
+- [Engineering Writeup](#engineering-writeup)
 
 ## Features
 
@@ -42,10 +43,11 @@ A full-stack AI Companion web application featuring AI-powered conversations wit
 #### Stories
 - **Instagram-style Stories**: Full-screen story viewer with:
   - Progress bars showing story position
-  - Auto-advance (5 seconds per story)
+  - Auto-advance (5 seconds for images, video duration for videos)
   - Tap navigation (left/right sides)
   - Swipe between companions
-  - 35+ story posts across companions
+  - **Video support** with mute/unmute controls
+  - Mixture of photos and videos across 35+ story posts
 
 #### Companion Creator
 - **5-Step Wizard**: Create custom companions with:
@@ -422,10 +424,136 @@ This repository is **public** because Render's free tier does not support automa
 - Upgrade to Render's paid plan for private repo support
 - Use an alternative hosting provider (Railway, Fly.io, etc.)
 
+---
+
+## Engineering Writeup
+
+### Competitors Studied
+
+Before building this application, I researched several AI companion platforms:
+
+1. **Nectar AI** - The primary reference for this project. Key observations:
+   - Clean, mobile-first UI with focus on companion cards
+   - Instagram-style stories feature for engagement
+   - Personality-based AI interactions
+   - Mood-aware conversations
+
+2. **Character.AI** - Studied their conversation flow and character creation
+   - Multi-turn conversation handling
+   - Character personality persistence
+
+3. **Replika** - Analyzed their companion customization approach
+   - Emotional connection features
+   - Memory and relationship progression
+
+4. **Instagram Stories** - For the Stories UX implementation
+   - Progress bar behavior
+   - Tap-to-navigate interaction patterns
+   - Auto-advance timing
+
+### UI Design Decisions
+
+**Why this design approach:**
+
+1. **Mobile-First Design**: The target audience primarily uses mobile devices for intimate companion interactions. The bottom navigation, swipe gestures, and full-screen stories all prioritize mobile UX while remaining functional on desktop.
+
+2. **Pink/Gradient Theme**: Romantic and warm colors (pink, rose, coral) create an emotional atmosphere that aligns with the companion concept. The gradient effects add modern polish without being distracting.
+
+3. **Card-Based Layouts**: Companion cards with avatar, name, and tags allow quick scanning and selection. This pattern is familiar from dating apps, making the UX intuitive.
+
+4. **Full-Screen Stories**: Following Instagram's proven pattern for immersive content consumption. The overlay approach with progress bars, tap zones, and swipe navigation creates an engaging experience.
+
+5. **Streaming Chat**: Word-by-word streaming creates the illusion of real-time typing, making the AI feel more human and present.
+
+### Product Feature Decisions
+
+**Core Feature: Stories**
+- Implemented full Instagram-style functionality with progress bars, tap navigation, and auto-advance
+- Added video support with mute/unmute controls for richer content
+- Stories expire after 24 hours to create urgency and encourage return visits
+
+**Net-New Feature 1: Memory Timeline**
+- **Why:** Memory is crucial for relationship building. Users want to feel their interactions matter and persist over time.
+- **Implementation:** Visual timeline grouped by date, showing chat sessions and story views
+- **User Value:** Creates emotional investment by showing relationship history
+
+**Net-New Feature 2: AI Mood Mode**
+- **Why:** Different users want different experiences at different times. A romantic mood at night, playful during breaks.
+- **Implementation:** Four distinct moods (Calm, Romantic, Playful, Deep) that modify AI system prompts and UI theming
+- **User Value:** Personalization that adapts to the user's emotional state
+
+### Architecture Decisions
+
+**Why PostgreSQL:**
+- **ACID Compliance**: Chat messages and user data require transactional integrity
+- **JSON Support**: JSONB columns for flexible companion personality/appearance data without schema migrations
+- **Indexing**: Full index support for efficient queries on conversation history and story retrieval
+- **Scalability**: Proven to scale with proper indexing and connection pooling
+- **AWS RDS**: Managed service reduces operational overhead, automated backups
+
+**Why Go for Backend:**
+- **Performance**: Compiled language with excellent concurrency for handling many simultaneous chat sessions
+- **Memory Efficiency**: Lower resource usage than Node.js, important for cost-effective hosting
+- **Gin Framework**: Mature, fast HTTP framework with middleware support
+
+**Why Next.js App Router:**
+- **Server Components**: Reduced client-side JavaScript, faster initial loads
+- **API Routes**: Built-in serverless functions for the streaming endpoint
+- **Edge Runtime**: Streaming responses without timeout limitations
+
+### Scalability Considerations
+
+1. **Database Indexing**
+   - All foreign keys indexed
+   - Compound indexes on frequent query patterns (session_id + companion_id)
+   - Stories indexed by companion_id for fast retrieval
+
+2. **Stateless Backend**
+   - JWT tokens for authentication (no server-side sessions)
+   - Horizontal scaling ready - any instance can handle any request
+
+3. **Connection Pooling**
+   - Go backend uses connection pool (25 max, 5 idle)
+   - Prevents database connection exhaustion under load
+
+4. **AI Provider Fallback Chain**
+   - Primary: Anthropic Claude
+   - Secondary: Groq
+   - Tertiary: Pattern-based fallback
+   - Ensures reliability even during API outages
+
+5. **Session-Based Public Chat**
+   - Allows demo usage without authentication
+   - Session IDs enable conversation persistence without user accounts
+
+### Challenges and Debugging
+
+1. **Chat Double-Reload Issue**
+   - **Problem**: Messages reloaded twice when sending, causing duplicates
+   - **Debugging**: Used React DevTools to trace useEffect dependencies
+   - **Solution**: Removed `messages` from useEffect dependencies, used refs for one-time history loading
+
+2. **Streaming Response Timing**
+   - **Problem**: SSE responses sometimes arrived out of order
+   - **Debugging**: Added logging to track chunk sequence
+   - **Solution**: Implemented proper buffering in the frontend with word-by-word display
+
+3. **Video Stories Duration**
+   - **Problem**: Videos didn't auto-advance at the right time
+   - **Debugging**: Checked video element events
+   - **Solution**: Used `onLoadedMetadata` to get video duration, `onEnded` for advancement
+
+4. **CORS Issues**
+   - **Problem**: Frontend couldn't reach backend after deployment
+   - **Debugging**: Browser console showed CORS errors
+   - **Solution**: Added proper ALLOWED_ORIGINS configuration with both Vercel and localhost
+
+---
+
 ## License
 
 MIT License
 
 ---
 
-Built with ❤️ using Next.js, Go, and Anthropic Claude
+Built with Next.js, Go, and Anthropic Claude
