@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Companions table
 CREATE TABLE IF NOT EXISTS companions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     category VARCHAR(20) NOT NULL CHECK (category IN ('girls', 'guys', 'anime')),
     bio TEXT,
@@ -24,8 +24,8 @@ CREATE TABLE IF NOT EXISTS companions (
 
 -- Stories table
 CREATE TABLE IF NOT EXISTS stories (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    companion_id UUID NOT NULL REFERENCES companions(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY,
+    companion_id TEXT NOT NULL REFERENCES companions(id) ON DELETE CASCADE,
     media_url TEXT NOT NULL,
     media_type VARCHAR(20) NOT NULL CHECK (media_type IN ('image', 'video')),
     caption TEXT,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS stories (
 -- Story views table
 CREATE TABLE IF NOT EXISTS story_views (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    story_id UUID NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
+    story_id TEXT NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     viewed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(story_id, user_id)
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS story_views (
 CREATE TABLE IF NOT EXISTS conversations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    companion_id UUID NOT NULL REFERENCES companions(id) ON DELETE CASCADE,
+    companion_id TEXT NOT NULL REFERENCES companions(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, companion_id)
 );
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE TABLE IF NOT EXISTS memories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    companion_id UUID NOT NULL REFERENCES companions(id) ON DELETE CASCADE,
+    companion_id TEXT NOT NULL REFERENCES companions(id) ON DELETE CASCADE,
     event_type VARCHAR(50) NOT NULL CHECK (event_type IN ('chat', 'story_view', 'milestone', 'mood_change')),
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
