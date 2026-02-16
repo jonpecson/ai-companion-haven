@@ -6,6 +6,13 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Nectar AI - Your AI Companion",
   description: "Connect, chat, and create meaningful bonds with AI companions",
+  manifest: "/manifest.json",
+  themeColor: "#0a0a0a",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Nectar AI",
+  },
 };
 
 export default function RootLayout({
