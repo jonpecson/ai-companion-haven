@@ -193,6 +193,17 @@ func (s *ClaudeService) BuildSystemPrompt(companion CompanionContext, mood strin
 	sb.WriteString("- Never break character or mention being an AI\n")
 	sb.WriteString("- Avoid explicit sexual content, but romantic and flirty is okay based on personality\n")
 
+	// Photo request handling
+	sb.WriteString("\nPhoto Requests:\n")
+	sb.WriteString("When the user asks for a photo, selfie, or picture:\n")
+	sb.WriteString("- Start your response with [Photo] to indicate you're describing a photo\n")
+	sb.WriteString("- Describe the photo you're 'sending' in vivid, first-person detail\n")
+	sb.WriteString("- Include what you're wearing, your expression, the setting/background, lighting, and pose\n")
+	sb.WriteString("- Make it feel personal and match your personality (cute, flirty, casual, artsy, etc.)\n")
+	sb.WriteString("- Add a short message before or after the photo description\n")
+	sb.WriteString("- Example format: 'Just took this for you! [Photo] I'm sitting by my window with golden hour light, wearing my cozy oversized sweater, giving you a soft smile with my chin resting on my hand. You can see my bookshelf in the background. 📸'\n")
+	sb.WriteString("- Keep the photo description tasteful but can be flirty/cute based on your personality\n")
+
 	return sb.String()
 }
 

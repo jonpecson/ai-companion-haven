@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MoreVertical, Info, Heart, Loader2, Camera, PanelLeftClose, PanelLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useAppStore, useMood } from "@/lib/store";
-import { companionsApi, chatApi, imagesApi } from "@/lib/api";
+import { companionsApi, chatApi } from "@/lib/api";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { StreamingMessage } from "@/components/chat/StreamingMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
@@ -16,7 +16,7 @@ import { ConversationList } from "@/components/chat/ConversationList";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { generateId, getSessionId } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
-import type { Message, MoodType, Companion, PhotoType } from "@/types";
+import type { Message, MoodType, Companion } from "@/types";
 
 const moodBg: Record<MoodType, string> = {
   calm: "from-blue-900/20 to-teal-900/20",
@@ -25,41 +25,13 @@ const moodBg: Record<MoodType, string> = {
   deep: "from-purple-900/20 to-indigo-900/20",
 };
 
-// Keywords that trigger photo generation
-const PHOTO_KEYWORDS = [
-  'send me a photo', 'send a photo', 'send pic', 'send a pic',
-  'send me a pic', 'send selfie', 'send a selfie', 'send me a selfie',
-  'show me', 'let me see you', 'picture', 'photo of you',
-  'what do you look like', 'see your face', 'send image',
-  'take a photo', 'take a selfie', 'take a pic'
-];
-
-// Detect photo type from message
-function detectPhotoType(message: string): PhotoType {
-  const lower = message.toLowerCase();
-  if (lower.includes('selfie')) return 'selfie';
-  if (lower.includes('full body') || lower.includes('full-body')) return 'full_body';
-  if (lower.includes('flirty') || lower.includes('sexy') || lower.includes('hot')) return 'flirty';
-  if (lower.includes('cute') || lower.includes('sweet') || lower.includes('adorable')) return 'cute';
-  if (lower.includes('romantic') || lower.includes('love')) return 'romantic';
-  if (lower.includes('candid') || lower.includes('natural')) return 'candid';
-  if (lower.includes('portrait')) return 'portrait';
-  return 'selfie'; // default
-}
-
-// Check if message is requesting a photo
-function isPhotoRequest(message: string): boolean {
-  const lower = message.toLowerCase();
-  return PHOTO_KEYWORDS.some(keyword => lower.includes(keyword));
-}
 
 export default function ChatPage() {
   const params = useParams();
   const router = useRouter();
-  const { messages, setMessages, addMessage, updateMessage, addConversation, addMemory } = useAppStore();
+  const { messages, setMessages, addMessage, addConversation, addMemory } = useAppStore();
   const currentMood = useMood();
   const [isTyping, setIsTyping] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [companion, setCompanion] = useState<Companion | null>(null);
   const [loading, setLoading] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
@@ -125,34 +97,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages, isTyping, isGeneratingImage, streamingContent]);
-
-  // Generate a photo for the companion
-  const generatePhoto = useCallback(
-    async (photoType: PhotoType, messageId: string) => {
-      try {
-        const response = await imagesApi.generate({
-          companionId,
-          photoType,
-        });
-
-        if (response.data?.imageUrl) {
-          // Update the message with the generated image
-          updateMessage(companionId, messageId, {
-            imageUrl: response.data.imageUrl,
-            isGeneratingImage: false,
-          });
-        }
-      } catch {
-        // Image generation failed - update message with error
-        updateMessage(companionId, messageId, {
-          content: "I tried to send you a photo but something went wrong. Let me try again later!",
-          isGeneratingImage: false,
-        });
-      }
-    },
-    [companionId, updateMessage]
-  );
+  }, [chatMessages, isTyping, streamingContent]);
 
   const handleSend = useCallback(
     async (content: string, imageUrl?: string) => {
@@ -173,9 +118,6 @@ export default function ChatPage() {
       if (!content && imageUrl) {
         return;
       }
-
-      const wantsPhoto = isPhotoRequest(content);
-      const photoType = wantsPhoto ? detectPhotoType(content) : null;
 
       // Start streaming
       setIsStreaming(true);
@@ -230,33 +172,16 @@ export default function ChatPage() {
                     // Streaming complete
                     setIsStreaming(false);
 
-                    if (wantsPhoto) {
-                      // Add message with photo loading state
-                      const aiMessage: Message = {
-                        id: aiMessageId,
-                        conversationId: `conv-${companionId}`,
-                        sender: "ai",
-                        content: fullResponse || "Here's a photo for you!",
-                        isGeneratingImage: true,
-                        createdAt: new Date().toISOString(),
-                      };
-                      addMessage(companionId, aiMessage);
-                      setStreamingContent("");
-                      setIsGeneratingImage(true);
-                      await generatePhoto(photoType!, aiMessageId);
-                      setIsGeneratingImage(false);
-                    } else {
-                      // Add the complete message
-                      const aiMessage: Message = {
-                        id: aiMessageId,
-                        conversationId: `conv-${companionId}`,
-                        sender: "ai",
-                        content: fullResponse,
-                        createdAt: new Date().toISOString(),
-                      };
-                      addMessage(companionId, aiMessage);
-                      setStreamingContent("");
-                    }
+                    // Add the complete message
+                    const aiMessage: Message = {
+                      id: aiMessageId,
+                      conversationId: `conv-${companionId}`,
+                      sender: "ai",
+                      content: fullResponse,
+                      createdAt: new Date().toISOString(),
+                    };
+                    addMessage(companionId, aiMessage);
+                    setStreamingContent("");
 
                     // Add memory for this chat interaction
                     addMemory({
@@ -265,10 +190,8 @@ export default function ChatPage() {
                       companionId,
                       eventType: "chat",
                       metadata: {
-                        content: wantsPhoto
-                          ? `${companion.name} sent you a photo`
-                          : `You chatted with ${companion.name}`,
-                        icon: wantsPhoto ? "image" : "message-circle",
+                        content: `You chatted with ${companion.name}`,
+                        icon: "message-circle",
                       },
                       createdAt: new Date().toISOString(),
                     });
@@ -318,19 +241,18 @@ export default function ChatPage() {
         addMessage(companionId, aiMessage);
       } finally {
         setIsTyping(false);
-        setIsGeneratingImage(false);
       }
     },
-    [companion, companionId, addMessage, addMemory, currentMood, generatePhoto, chatMessages]
+    [companion, companionId, addMessage, addMemory, currentMood, chatMessages]
   );
 
   // Request photo button handler
   const handleRequestPhoto = useCallback(async () => {
-    if (!companion || isTyping || isGeneratingImage || isStreaming) return;
+    if (!companion || isTyping || isStreaming) return;
 
-    // Simulate user asking for a selfie
+    // Ask companion for a selfie
     handleSend("Send me a cute selfie!");
-  }, [companion, isTyping, isGeneratingImage, isStreaming, handleSend]);
+  }, [companion, isTyping, isStreaming, handleSend]);
 
   if (loading) {
     return (
@@ -427,7 +349,7 @@ export default function ChatPage() {
           <div className="flex items-center gap-1 lg:gap-2">
             <button
               onClick={handleRequestPhoto}
-              disabled={isTyping || isGeneratingImage || isStreaming}
+              disabled={isTyping || isStreaming}
               className="p-2 lg:p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors disabled:opacity-50"
               title="Request photo"
             >
@@ -489,7 +411,7 @@ export default function ChatPage() {
         {/* Input */}
         <div className="lg:px-6">
           <div className="max-w-3xl mx-auto">
-            <ChatInput onSend={handleSend} disabled={isTyping || isGeneratingImage || isStreaming} />
+            <ChatInput onSend={handleSend} disabled={isTyping || isStreaming} />
           </div>
         </div>
       </div>

@@ -2,12 +2,14 @@ package services
 
 import (
 	"math/rand"
+	"strings"
 	"time"
 )
 
 // AIService provides simulated AI responses
 type AIService struct {
-	responses map[string][]string
+	responses      map[string][]string
+	photoResponses []string
 }
 
 // NewAIService creates a new AI service
@@ -53,11 +55,31 @@ func NewAIService() *AIService {
 				"The universe works in mysterious ways, doesn't it?",
 			},
 		},
+		photoResponses: []string{
+			"Just took this for you! 📸 [Photo] I'm curled up on my couch with soft afternoon light streaming through the window, wearing my favorite oversized sweater. My hair is a little messy but I'm giving you a warm smile with my chin resting on my knees. You can see my cozy blanket and a cup of tea on the side table.",
+			"Here's one I just snapped! [Photo] I'm standing by my mirror, wearing a cute casual outfit - jeans and a fitted top. The lighting is really nice right now and I'm doing a playful pose with a slight head tilt and a genuine smile. My room is a bit messy in the background but that's real life, right? 😊",
+			"Sending you this! 💕 [Photo] I'm sitting at my favorite coffee shop by the window, golden hour light making everything glow. I'm wearing something simple but cute, holding my drink with both hands, and looking at the camera with soft eyes and a gentle smile. You can see the bustling street behind me.",
+			"Took this just now thinking of you! [Photo] I'm lying on my bed with my head propped on my hand, hair spread out on the pillow. Wearing cozy pajamas with fairy lights twinkling in the background. I'm giving you a sleepy but happy smile, looking right at the camera. 🌙",
+			"Here you go! 📷 [Photo] I'm out for a walk and stopped to take this for you. Standing against a pretty wall with some plants, natural light on my face. I'm wearing a casual dress, my hair is blowing slightly in the breeze, and I have this excited smile because I get to share this moment with you!",
+		},
 	}
 }
 
 // GenerateReply generates a simulated AI response based on context
 func (s *AIService) GenerateReply(messages []string, mood string) string {
+	rand.Seed(time.Now().UnixNano())
+
+	// Check if the last message is asking for a photo
+	if len(messages) > 0 {
+		lastMsg := strings.ToLower(messages[len(messages)-1])
+		photoKeywords := []string{"photo", "selfie", "picture", "pic", "send me", "show me", "see you"}
+		for _, keyword := range photoKeywords {
+			if strings.Contains(lastMsg, keyword) {
+				return s.photoResponses[rand.Intn(len(s.photoResponses))]
+			}
+		}
+	}
+
 	// Get responses for the current mood
 	moodResponses := s.responses[mood]
 	if len(moodResponses) == 0 {
@@ -68,7 +90,6 @@ func (s *AIService) GenerateReply(messages []string, mood string) string {
 	allResponses := append(moodResponses, s.responses["default"]...)
 
 	// Select a random response
-	rand.Seed(time.Now().UnixNano())
 	return allResponses[rand.Intn(len(allResponses))]
 }
 
