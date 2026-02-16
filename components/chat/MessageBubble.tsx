@@ -28,8 +28,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       >
         <div
           className={cn(
-            "max-w-[80%] lg:max-w-[65%] rounded-2xl",
-            hasImage ? "overflow-hidden" : "px-4 py-2.5 lg:px-5 lg:py-3",
+            "rounded-2xl",
+            hasImage ? "overflow-hidden max-w-[280px] lg:max-w-[320px]" : "max-w-[80%] lg:max-w-[65%] px-4 py-2.5 lg:px-5 lg:py-3",
             isUser
               ? "gradient-primary text-white rounded-br-md"
               : "glass text-foreground rounded-bl-md"
@@ -42,26 +42,25 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 className="relative cursor-pointer"
                 onClick={() => setShowFullImage(true)}
               >
-                {/* Use regular img tag for base64 data URLs */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={message.imageUrl!}
                   alt="Companion photo"
                   className={cn(
-                    "w-full max-w-[400px] object-cover transition-opacity duration-300",
+                    "w-full h-auto object-cover transition-opacity duration-300 rounded-t-xl",
                     imageLoaded ? "opacity-100" : "opacity-0"
                   )}
                   onLoad={() => setImageLoaded(true)}
                 />
                 {!imageLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted/50 min-h-[200px]">
                     <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                   </div>
                 )}
               </div>
               {message.content && (
-                <div className="px-4 py-2.5 lg:px-5 lg:py-3">
-                  <p className="text-sm lg:text-base leading-relaxed whitespace-pre-wrap">
+                <div className="px-3 py-2 lg:px-4 lg:py-2.5">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
                     {message.content}
                   </p>
                 </div>
@@ -100,7 +99,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <p
             className={cn(
               "text-[10px] lg:text-xs mt-1",
-              hasImage ? "px-4 pb-2" : "",
+              hasImage ? "px-3 pb-2" : "",
               isUser ? "text-white/70" : "text-muted-foreground"
             )}
           >
