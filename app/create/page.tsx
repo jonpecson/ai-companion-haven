@@ -392,7 +392,7 @@ export default function CreateCompanionPage() {
                             {formData.name || "Your Companion"}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {formData.age} years old • {formData.category}
+                            {formData.age} years old • {categoryOptions.find(c => c.id === formData.category)?.label || formData.category}
                           </p>
                         </div>
                       </div>
@@ -684,8 +684,8 @@ export default function CreateCompanionPage() {
                           <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
                             Online
                           </span>
-                          <span className="px-2 py-1 rounded-full bg-white/10 text-white/80 text-xs capitalize">
-                            {formData.category}
+                          <span className="px-2 py-1 rounded-full bg-white/10 text-white/80 text-xs">
+                            {categoryOptions.find(c => c.id === formData.category)?.label || formData.category}
                           </span>
                         </div>
                         <h3 className="text-white font-bold text-2xl">
