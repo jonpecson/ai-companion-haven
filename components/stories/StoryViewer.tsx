@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { Story, Companion } from "@/types";
 
 interface StoryViewerProps {
@@ -35,29 +34,59 @@ export function StoryViewer({
   const story = stories[currentIndex];
   const duration = 5000; // 5 seconds per story
 
+  // Use refs to avoid timer restarts when callbacks change
+  const storiesLengthRef = useRef(stories.length);
+  const onNextCompanionRef = useRef(onNextCompanion);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    storiesLengthRef.current = stories.length;
+  }, [stories.length]);
+
+  useEffect(() => {
+    onNextCompanionRef.current = onNextCompanion;
+  }, [onNextCompanion]);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  // Reset index when companion changes
+  useEffect(() => {
+    setCurrentIndex(0);
+    setProgress(0);
+  }, [stories]);
+
   const goNext = useCallback(() => {
-    if (currentIndex >= stories.length - 1) {
-      if (onNextCompanion) {
-        onNextCompanion();
-      } else {
-        onClose();
+    setCurrentIndex((prev) => {
+      if (prev >= storiesLengthRef.current - 1) {
+        // Schedule companion change after state update
+        setTimeout(() => {
+          if (onNextCompanionRef.current) {
+            onNextCompanionRef.current();
+          } else {
+            onCloseRef.current();
+          }
+        }, 0);
+        return prev;
       }
-    } else {
-      setCurrentIndex((prev) => prev + 1);
-      setProgress(0);
-    }
-  }, [currentIndex, stories.length, onNextCompanion, onClose]);
+      return prev + 1;
+    });
+    setProgress(0);
+  }, []);
 
   const goPrev = useCallback(() => {
-    if (currentIndex <= 0) {
-      if (onPrevCompanion) {
-        onPrevCompanion();
+    setCurrentIndex((prev) => {
+      if (prev <= 0) {
+        if (onPrevCompanion) {
+          setTimeout(() => onPrevCompanion(), 0);
+        }
+        return prev;
       }
-    } else {
-      setCurrentIndex((prev) => prev - 1);
-      setProgress(0);
-    }
-  }, [currentIndex, onPrevCompanion]);
+      return prev - 1;
+    });
+    setProgress(0);
+  }, [onPrevCompanion]);
 
   useEffect(() => {
     if (story && !story.viewed) {

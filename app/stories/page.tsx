@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback } from "react";
+import { useState, useEffect, Suspense, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Loader2, ChevronLeft, ChevronRight, X, Play } from "lucide-react";
@@ -37,29 +37,53 @@ function DesktopStoryViewer({
   const story = stories[currentIndex];
   const duration = 5000;
 
+  // Use refs to avoid timer restarts when callbacks change
+  const storiesLengthRef = useRef(stories.length);
+  const onNextCompanionRef = useRef(onNextCompanion);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    storiesLengthRef.current = stories.length;
+  }, [stories.length]);
+
+  useEffect(() => {
+    onNextCompanionRef.current = onNextCompanion;
+  }, [onNextCompanion]);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   const goNext = useCallback(() => {
-    if (currentIndex >= stories.length - 1) {
-      if (onNextCompanion) {
-        onNextCompanion();
-      } else {
-        onClose();
+    setCurrentIndex((prev) => {
+      if (prev >= storiesLengthRef.current - 1) {
+        // Schedule companion change after state update
+        setTimeout(() => {
+          if (onNextCompanionRef.current) {
+            onNextCompanionRef.current();
+          } else {
+            onCloseRef.current();
+          }
+        }, 0);
+        return prev;
       }
-    } else {
-      setCurrentIndex((prev) => prev + 1);
-      setProgress(0);
-    }
-  }, [currentIndex, stories.length, onNextCompanion, onClose]);
+      return prev + 1;
+    });
+    setProgress(0);
+  }, []);
 
   const goPrev = useCallback(() => {
-    if (currentIndex <= 0) {
-      if (onPrevCompanion) {
-        onPrevCompanion();
+    setCurrentIndex((prev) => {
+      if (prev <= 0) {
+        if (onPrevCompanion) {
+          setTimeout(() => onPrevCompanion(), 0);
+        }
+        return prev;
       }
-    } else {
-      setCurrentIndex((prev) => prev - 1);
-      setProgress(0);
-    }
-  }, [currentIndex, onPrevCompanion]);
+      return prev - 1;
+    });
+    setProgress(0);
+  }, [onPrevCompanion]);
 
   // Reset index when companion changes
   useEffect(() => {
