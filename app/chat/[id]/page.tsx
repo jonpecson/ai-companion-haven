@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MoreVertical, Info, Heart, Loader2, Camera, PanelLeftClose, PanelLeft } from "lucide-react";
+import { ArrowLeft, MoreVertical, Info, Heart, Loader2, Camera, PanelLeftClose, PanelLeft, Home } from "lucide-react";
 import { toast } from "sonner";
 import { useAppStore, useMood } from "@/lib/store";
 import { companionsApi, chatApi } from "@/lib/api";
@@ -324,6 +324,15 @@ export default function ChatPage() {
             >
               <ArrowLeft size={20} className="text-foreground" />
             </button>
+
+            {/* Home button */}
+            <Link
+              href="/"
+              className="p-2 hover:bg-muted/50 rounded-full transition-colors"
+              title="Go to home"
+            >
+              <Home size={20} className="text-muted-foreground" />
+            </Link>
 
             {/* Companion Info */}
             <div className="relative w-10 h-10 lg:w-11 lg:h-11 rounded-full overflow-hidden ring-2 ring-primary/20">
