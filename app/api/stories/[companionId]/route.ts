@@ -1,28 +1,31 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/db";
+
+const GO_BACKEND_URL = process.env.BACKEND_URL || "https://ai-companion-haven.onrender.com";
 
 export async function GET(
   request: Request,
   { params }: { params: { companionId: string } }
 ) {
   try {
-    const result = await pool.query(
-      `SELECT id, companion_id as "companionId", media_type as "type", media_url as "mediaUrl",
-              caption, viewed, order_index as "orderIndex", expires_at as "expiresAt",
-              created_at as "createdAt"
-       FROM stories
-       WHERE companion_id = $1 AND expires_at > NOW()
-       ORDER BY order_index ASC`,
-      [params.companionId]
-    );
+    const response = await fetch(`${GO_BACKEND_URL}/api/stories/${params.companionId}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
 
-    return NextResponse.json({ data: result.rows }, {
+    if (!response.ok) {
+      throw new Error(`Backend responded with ${response.status}`);
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'no-store, max-age=0',
       }
     });
   } catch (error) {
-    console.error("Database error:", error);
+    console.error("Backend error:", error);
     return NextResponse.json(
       { error: "Failed to fetch stories" },
       { status: 500 }

@@ -1,25 +1,33 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/db";
+
+const GO_BACKEND_URL = process.env.BACKEND_URL || "https://ai-companion-haven.onrender.com";
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const result = await pool.query(
-      `SELECT id, name, category, bio, avatar_url as avatar, personality_json as personality,
-              tags, age, status, greeting
-       FROM companions WHERE id = $1`,
-      [params.id]
-    );
+    const response = await fetch(`${GO_BACKEND_URL}/api/companions/${params.id}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
 
-    if (result.rows.length === 0) {
-      return NextResponse.json({ error: "Companion not found" }, { status: 404 });
+    if (!response.ok) {
+      if (response.status === 404) {
+        return NextResponse.json(
+          { error: "Companion not found" },
+          { status: 404 }
+        );
+      }
+      throw new Error(`Backend responded with ${response.status}`);
     }
 
-    return NextResponse.json({ data: result.rows[0] });
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
-    console.error("Database error:", error);
+    console.error("Backend error:", error);
     return NextResponse.json(
       { error: "Failed to fetch companion" },
       { status: 500 }
