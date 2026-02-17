@@ -3,7 +3,7 @@
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Bell } from "lucide-react";
+import { Search } from "lucide-react";
 
 export function TopBar() {
   const pathname = usePathname();
@@ -57,12 +57,6 @@ export function TopBar() {
           className="sm:hidden flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-muted"
         >
           <Search className="h-5 w-5 text-muted-foreground" />
-        </button>
-
-        {/* Notification */}
-        <button className="relative flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-muted">
-          <Bell className="h-5 w-5 text-muted-foreground" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
         </button>
 
         {/* CTA */}
