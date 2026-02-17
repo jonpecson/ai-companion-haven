@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MoreVertical, Info, Heart, Loader2, Camera, PanelLeftClose, PanelLeft, Home } from "lucide-react";
 import { toast } from "sonner";
 import { useAppStore, useMood } from "@/lib/store";
-import { companionsApi, chatApi } from "@/lib/api";
+import { companionsApi, chatApi, storiesApi } from "@/lib/api";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { StreamingMessage } from "@/components/chat/StreamingMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
@@ -38,6 +38,7 @@ export default function ChatPage() {
   const [showConversations, setShowConversations] = useState(true);
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [hasStories, setHasStories] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasLoadedHistory = useRef(false);
 
@@ -57,6 +58,14 @@ export default function ChatPage() {
           companion: response.data,
           createdAt: new Date().toISOString(),
         });
+
+        // Check if companion has stories
+        try {
+          const storiesResponse = await storiesApi.getByCompanion(companionId);
+          setHasStories(storiesResponse.data && storiesResponse.data.length > 0);
+        } catch {
+          setHasStories(false);
+        }
 
         // Load chat history from database only once and if local storage is empty
         if (!hasLoadedHistory.current) {
@@ -335,16 +344,35 @@ export default function ChatPage() {
               <Home size={20} className="text-muted-foreground" />
             </Link>
 
-            {/* Companion Info */}
-            <div className="relative w-10 h-10 lg:w-11 lg:h-11 rounded-full overflow-hidden ring-2 ring-primary/20">
-              <Image
-                src={companion.avatar}
-                alt={companion.name}
-                fill
-                className="object-cover"
-                sizes="44px"
-              />
-            </div>
+            {/* Companion Info - Profile with Story Ring */}
+            {hasStories ? (
+              <Link
+                href={`/stories?companion=${companionId}`}
+                className="relative w-10 h-10 lg:w-11 lg:h-11 rounded-full p-[2px] bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 cursor-pointer hover:scale-105 transition-transform"
+              >
+                <div className="w-full h-full rounded-full overflow-hidden bg-background p-[2px]">
+                  <div className="relative w-full h-full rounded-full overflow-hidden">
+                    <Image
+                      src={companion.avatar}
+                      alt={companion.name}
+                      fill
+                      className="object-cover"
+                      sizes="44px"
+                    />
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="relative w-10 h-10 lg:w-11 lg:h-11 rounded-full overflow-hidden ring-2 ring-primary/20">
+                <Image
+                  src={companion.avatar}
+                  alt={companion.name}
+                  fill
+                  className="object-cover"
+                  sizes="44px"
+                />
+              </div>
+            )}
             <div>
               <h2 className="text-sm lg:text-base font-semibold text-foreground">
                 {companion.name}
