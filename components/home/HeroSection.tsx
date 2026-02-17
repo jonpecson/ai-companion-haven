@@ -5,7 +5,7 @@ import { Sparkles, ArrowRight } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-secondary p-3 sm:p-6 md:p-8 lg:p-12">
+    <section className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-secondary p-3 sm:p-6 md:p-8 lg:p-12 w-full max-w-full">
       {/* Ambient glow - hidden on very small screens to prevent overflow */}
       <div className="hidden sm:block absolute right-0 top-0 h-40 w-40 sm:h-64 sm:w-64 rounded-full bg-primary/20 blur-[80px] sm:blur-[100px] translate-x-1/2 -translate-y-1/2" />
       <div className="hidden sm:block absolute bottom-0 left-0 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-primary/10 blur-[60px] sm:blur-[80px] -translate-x-1/2 translate-y-1/2" />

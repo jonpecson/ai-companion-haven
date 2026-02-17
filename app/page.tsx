@@ -50,11 +50,11 @@ export default function HomePage() {
       <IconSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-16">
+      <main className="flex-1 lg:ml-16 min-w-0 overflow-x-hidden">
         {/* Top Bar */}
         <TopBar />
 
-        <div className="space-y-6 lg:space-y-8 p-4 lg:p-6">
+        <div className="space-y-6 lg:space-y-8 p-4 lg:p-6 max-w-full">
           {/* Hero Section */}
           <HeroSection />
 
