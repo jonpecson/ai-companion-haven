@@ -22,10 +22,17 @@ export function formatRelativeTime(date: string | Date): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  // Format actual time
+  const timeStr = then.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  if (diffMins < 1) return `Just now · ${timeStr}`;
+  if (diffMins < 60) return `${diffMins}m ago · ${timeStr}`;
+  if (diffHours < 24) return `${diffHours}h ago · ${timeStr}`;
+  if (diffDays < 7) return `${diffDays}d ago · ${timeStr}`;
   return formatDate(date);
 }
 

@@ -26,6 +26,7 @@ export function CompanionCard({ companion }: CompanionCardProps) {
           src={companion.avatar}
           alt={companion.name}
           fill
+          loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
         />

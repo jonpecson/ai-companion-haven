@@ -140,7 +140,60 @@ export function StoryViewer({
     setVideoDuration(null);
   }, [currentIndex]);
 
-  const handleTap = (e: React.MouseEvent) => {
+  // Track touch state for distinguishing tap vs hold
+  const touchStartTime = useRef<number>(0);
+  const touchStartX = useRef<number>(0);
+  const touchStartY = useRef<number>(0);
+  const isTouchHold = useRef<boolean>(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartTime.current = Date.now();
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isTouchHold.current = false;
+
+    // Start hold timer - pause after 150ms of holding
+    setTimeout(() => {
+      if (touchStartTime.current > 0) {
+        isTouchHold.current = true;
+        setIsPaused(true);
+      }
+    }, 150);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const touchDuration = Date.now() - touchStartTime.current;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaX = Math.abs(touchEndX - touchStartX.current);
+    const deltaY = Math.abs(touchEndY - touchStartY.current);
+
+    touchStartTime.current = 0;
+    setIsPaused(false);
+
+    // If it was a hold (>150ms) or significant movement, don't navigate
+    if (isTouchHold.current || deltaX > 30 || deltaY > 30) {
+      isTouchHold.current = false;
+      return;
+    }
+
+    // Quick tap - navigate based on position
+    const width = window.innerWidth;
+    if (touchEndX < width / 3) {
+      goPrev();
+    } else if (touchEndX > (width * 2) / 3) {
+      goNext();
+    }
+  };
+
+  const handleMouseDown = () => setIsPaused(true);
+  const handleMouseUp = () => setIsPaused(false);
+
+  // Desktop click handler (only for non-touch devices)
+  const handleClick = (e: React.MouseEvent) => {
+    // Skip if this was a touch event (let touch handlers manage it)
+    if (e.detail === 0) return;
+
     const x = e.clientX;
     const width = window.innerWidth;
     if (x < width / 3) {
@@ -149,9 +202,6 @@ export function StoryViewer({
       goNext();
     }
   };
-
-  const handleTouchStart = () => setIsPaused(true);
-  const handleTouchEnd = () => setIsPaused(false);
 
   if (!story) return null;
 
@@ -162,21 +212,64 @@ export function StoryViewer({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] bg-black"
+        style={{ height: '100dvh' }}
       >
         <div
-          className="relative w-full h-full"
-          onClick={handleTap}
-          onMouseDown={handleTouchStart}
-          onMouseUp={handleTouchEnd}
+          className="relative w-full h-full select-none touch-manipulation"
+          onClick={handleClick}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Progress bars */}
-          <div className="absolute top-0 left-0 right-0 z-10 flex gap-1 p-3 pt-safe">
+          {/* Full-screen media container */}
+          <div className="absolute inset-0">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={story.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="relative w-full h-full"
+              >
+                {story.type === "video" ? (
+                  <video
+                    ref={videoRef}
+                    src={story.mediaUrl}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    autoPlay
+                    muted={isMuted}
+                    playsInline
+                    loop={false}
+                    onLoadedMetadata={(e) => {
+                      const video = e.target as HTMLVideoElement;
+                      setVideoDuration(video.duration);
+                    }}
+                    onEnded={goNext}
+                  />
+                ) : (
+                  <img
+                    src={story.mediaUrl}
+                    alt={story.caption || ""}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Gradient overlays for better UI visibility */}
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none" />
+          </div>
+
+          {/* Progress bars - with safe area */}
+          <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 px-2 pt-[env(safe-area-inset-top,12px)] pb-2">
             {stories.map((_, i) => (
               <div
                 key={i}
-                className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden"
+                className="flex-1 h-[3px] bg-white/30 rounded-full overflow-hidden"
               >
                 <div
                   className="h-full bg-white rounded-full transition-all duration-75"
@@ -193,8 +286,8 @@ export function StoryViewer({
             ))}
           </div>
 
-          {/* Header */}
-          <div className="absolute top-8 left-0 right-0 z-10 flex items-center justify-between px-4">
+          {/* Header - positioned below progress bars */}
+          <div className="absolute top-[calc(env(safe-area-inset-top,12px)+16px)] left-0 right-0 z-20 flex items-center justify-between px-4">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -202,40 +295,45 @@ export function StoryViewer({
               }}
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              <div className="relative w-8 h-8 rounded-full overflow-hidden">
+              <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/30">
                 <Image
                   src={companion.avatar}
                   alt={companion.name}
                   fill
                   className="object-cover"
-                  sizes="32px"
+                  sizes="40px"
                 />
               </div>
-              <span className="text-white text-sm font-medium">
-                {companion.name}
-              </span>
+              <div>
+                <span className="text-white text-sm font-semibold block drop-shadow-lg">
+                  {companion.name}
+                </span>
+                <span className="text-white/70 text-xs">
+                  {currentIndex + 1} of {stories.length}
+                </span>
+              </div>
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onClose();
               }}
-              className="text-white p-2"
+              className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"
             >
-              <X size={24} />
+              <X size={28} />
             </button>
           </div>
 
-          {/* Navigation arrows */}
+          {/* Navigation arrows - hidden on mobile, visible on desktop */}
           {onPrevCompanion && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onPrevCompanion();
               }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 text-white/70 hover:text-white"
+              className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-black/30 rounded-full text-white/80 hover:text-white hover:bg-black/50 transition-all"
             >
-              <ChevronLeft size={32} />
+              <ChevronLeft size={28} />
             </button>
           )}
           {onNextCompanion && (
@@ -244,45 +342,11 @@ export function StoryViewer({
                 e.stopPropagation();
                 onNextCompanion();
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 text-white/70 hover:text-white"
+              className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-black/30 rounded-full text-white/80 hover:text-white hover:bg-black/50 transition-all"
             >
-              <ChevronRight size={32} />
+              <ChevronRight size={28} />
             </button>
           )}
-
-          {/* Content */}
-          <motion.div
-            key={story.id}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative w-full h-full"
-          >
-            {story.type === "video" ? (
-              <video
-                ref={videoRef}
-                src={story.mediaUrl}
-                className="w-full h-full object-cover"
-                autoPlay
-                muted={isMuted}
-                playsInline
-                loop={false}
-                onLoadedMetadata={(e) => {
-                  const video = e.target as HTMLVideoElement;
-                  setVideoDuration(video.duration);
-                }}
-                onEnded={goNext}
-              />
-            ) : (
-              <Image
-                src={story.mediaUrl}
-                alt={story.caption || ""}
-                fill
-                className="object-cover"
-                sizes="100vw"
-                priority
-              />
-            )}
-          </motion.div>
 
           {/* Video mute/unmute button */}
           {isVideo && (
@@ -291,25 +355,44 @@ export function StoryViewer({
                 e.stopPropagation();
                 setIsMuted(!isMuted);
               }}
-              className="absolute bottom-24 right-4 z-10 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+              className="absolute bottom-[calc(env(safe-area-inset-bottom,20px)+100px)] right-4 z-20 p-3 bg-black/40 backdrop-blur-sm rounded-full text-white hover:bg-black/60 transition-colors"
             >
-              {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              {isMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
             </button>
           )}
 
-          {/* Caption */}
+          {/* Caption - with safe area */}
           {story.caption && (
-            <div className="absolute bottom-16 left-0 right-0 z-10 px-6">
+            <div className="absolute bottom-[calc(env(safe-area-inset-bottom,20px)+40px)] left-0 right-0 z-20 px-6">
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 key={story.id}
-                className="text-white text-center text-lg font-medium drop-shadow-lg"
+                className="text-white text-center text-lg font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
               >
                 {story.caption}
               </motion.p>
             </div>
           )}
+
+          {/* Pause indicator */}
+          <AnimatePresence>
+            {isPaused && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
+              >
+                <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                  <div className="flex gap-1.5">
+                    <div className="w-2 h-8 bg-white rounded-full" />
+                    <div className="w-2 h-8 bg-white rounded-full" />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
     </AnimatePresence>

@@ -120,13 +120,49 @@ function DesktopStoryViewer({
   if (!story) return null;
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-black/95 rounded-2xl overflow-hidden">
+    <div className="relative w-full h-full bg-black rounded-2xl overflow-hidden">
+      {/* Full-screen media container - absolute to fill entire parent */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={story.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="absolute inset-0"
+          onMouseDown={() => setIsPaused(true)}
+          onMouseUp={() => setIsPaused(false)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {story.type === "video" ? (
+            <video
+              src={story.mediaUrl}
+              className="absolute inset-0 w-full h-full object-cover"
+              autoPlay
+              muted
+              playsInline
+              onEnded={goNext}
+            />
+          ) : (
+            <img
+              src={story.mediaUrl}
+              alt={story.caption || ""}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Gradient overlays */}
+      <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/60 via-black/30 to-transparent pointer-events-none z-[1]" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none z-[1]" />
+
       {/* Progress bars */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex gap-1 p-4">
+      <div className="absolute top-0 left-0 right-0 z-10 flex gap-1 p-3">
         {stories.map((_, i) => (
           <div
             key={i}
-            className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden"
+            className="flex-1 h-[3px] bg-white/30 rounded-full overflow-hidden"
           >
             <div
               className="h-full bg-white rounded-full transition-all duration-75"
@@ -144,34 +180,34 @@ function DesktopStoryViewer({
       </div>
 
       {/* Header */}
-      <div className="absolute top-8 left-0 right-0 z-10 flex items-center justify-between px-4">
+      <div className="absolute top-10 left-0 right-0 z-10 flex items-center justify-between px-4">
         <button
           onClick={onProfileClick}
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/50">
+          <div className="relative w-11 h-11 rounded-full overflow-hidden ring-2 ring-white/40">
             <Image
               src={companion.avatar}
               alt={companion.name}
               fill
               className="object-cover"
-              sizes="40px"
+              sizes="44px"
             />
           </div>
           <div className="text-left">
-            <span className="text-white text-sm font-medium block">
+            <span className="text-white text-sm font-semibold block drop-shadow-lg">
               {companion.name}
             </span>
-            <span className="text-white/60 text-xs">
+            <span className="text-white/70 text-xs">
               {currentIndex + 1} of {stories.length}
             </span>
           </div>
         </button>
         <button
           onClick={onClose}
-          className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+          className="text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
         >
-          <X size={20} />
+          <X size={22} />
         </button>
       </div>
 
@@ -179,51 +215,16 @@ function DesktopStoryViewer({
       <button
         onClick={goPrev}
         disabled={currentIndex === 0 && !onPrevCompanion}
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 text-white/50 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-black/30 rounded-full text-white/70 hover:text-white hover:bg-black/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
       >
-        <ChevronLeft size={32} />
+        <ChevronLeft size={28} />
       </button>
       <button
         onClick={goNext}
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 text-white/50 hover:text-white transition-colors"
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-black/30 rounded-full text-white/70 hover:text-white hover:bg-black/50 transition-all"
       >
-        <ChevronRight size={32} />
+        <ChevronRight size={28} />
       </button>
-
-      {/* Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={story.id}
-          initial={{ opacity: 0, scale: 1.02 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.2 }}
-          className="relative w-full h-full"
-          onMouseDown={() => setIsPaused(true)}
-          onMouseUp={() => setIsPaused(false)}
-          onMouseLeave={() => setIsPaused(false)}
-        >
-          {story.type === "video" ? (
-            <video
-              src={story.mediaUrl}
-              className="w-full h-full object-contain"
-              autoPlay
-              muted
-              playsInline
-              onEnded={goNext}
-            />
-          ) : (
-            <Image
-              src={story.mediaUrl}
-              alt={story.caption || ""}
-              fill
-              className="object-contain"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              priority
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
 
       {/* Caption */}
       {story.caption && (
@@ -232,12 +233,31 @@ function DesktopStoryViewer({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             key={story.id}
-            className="text-white text-center text-base font-medium drop-shadow-lg"
+            className="text-white text-center text-base font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
           >
             {story.caption}
           </motion.p>
         </div>
       )}
+
+      {/* Pause indicator */}
+      <AnimatePresence>
+        {isPaused && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none"
+          >
+            <div className="w-14 h-14 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+              <div className="flex gap-1">
+                <div className="w-1.5 h-6 bg-white rounded-full" />
+                <div className="w-1.5 h-6 bg-white rounded-full" />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -483,9 +503,9 @@ function StoriesContent() {
         </div>
 
         {/* Right Side - Story Viewer */}
-        <div className="flex-1 bg-black/90 flex items-center justify-center p-8">
+        <div className="flex-1 bg-black flex items-center justify-center p-4">
           {activeCompanion && activeStories.length > 0 ? (
-            <div className="w-full max-w-md h-[calc(100vh-4rem)] max-h-[800px]">
+            <div className="w-full max-w-[400px] h-[calc(100vh-2rem)] aspect-[9/16] max-h-[90vh]">
               <DesktopStoryViewer
                 stories={activeStories}
                 companion={activeCompanion}

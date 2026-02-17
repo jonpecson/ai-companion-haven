@@ -1,33 +1,23 @@
 import { NextResponse } from "next/server";
+import { pool } from "@/lib/db";
 
-// Companion photo collections - multiple images per companion for variety
-const companionPhotos: Record<string, string[]> = {
-  "mia-chen": ["/images/companions/mia.jpg"],
-  "sofia-martinez": ["/images/companions/sofia.jpg"],
-  "emma-laurent": ["/images/companions/emma.jpg"],
-  "aria-rose": ["/images/companions/aria.jpg"],
-  "alex-rivera": ["/images/companions/alex.jpg"],
-  "ryan-kim": ["/images/companions/ryan.jpg"],
-  "atlas-monroe": ["/images/companions/atlas.jpg"],
-  "kai-nakamura": ["/images/companions/kai.jpg"],
-  "sakura-tanaka": ["/images/companions/sakura.jpg"],
-  "luna-nightshade": ["/images/companions/luna.jpg"],
-  "nova-valentine": ["/images/companions/nova.jpg"],
-};
-
-const companionNames: Record<string, string> = {
-  "mia-chen": "Mia Chen",
-  "sofia-martinez": "Sofia Martinez",
-  "emma-laurent": "Emma Laurent",
-  "aria-rose": "Aria Rose",
-  "alex-rivera": "Alex Rivera",
-  "ryan-kim": "Ryan Kim",
-  "atlas-monroe": "Atlas Monroe",
-  "kai-nakamura": "Kai Nakamura",
-  "sakura-tanaka": "Sakura Tanaka",
-  "luna-nightshade": "Luna Nightshade",
-  "nova-valentine": "Nova Valentine",
-};
+async function getCompanionById(companionId: string): Promise<{ name: string; avatar: string } | null> {
+  try {
+    const result = await pool.query(
+      "SELECT name, avatar_url FROM companions WHERE id = $1",
+      [companionId]
+    );
+    if (result.rows.length > 0) {
+      return {
+        name: result.rows[0].name,
+        avatar: result.rows[0].avatar_url,
+      };
+    }
+  } catch (error) {
+    console.error("Database error:", error);
+  }
+  return null;
+}
 
 export async function POST(request: Request) {
   try {
@@ -41,12 +31,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get photos for this companion or use defaults
-    const photos = companionPhotos[companionId] || ["/images/companions/mia.jpg"];
-
-    // Pick a random photo from the companion's collection
-    const randomIndex = Math.floor(Math.random() * photos.length);
-    const imageUrl = photos[randomIndex];
+    // Get companion data from database
+    const companion = await getCompanionById(companionId);
+    const imageUrl = companion?.avatar || "/images/companions/default.jpg";
+    const companionName = companion?.name || "AI Companion";
 
     // Simulate a small delay like real image generation
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -55,7 +43,7 @@ export async function POST(request: Request) {
       data: {
         imageUrl,
         companionId,
-        companion: companionNames[companionId] || "AI Companion",
+        companion: companionName,
         photoType: photoType || "selfie",
       },
     });

@@ -172,12 +172,13 @@ export default function ChatPage() {
                     // Streaming complete
                     setIsStreaming(false);
 
-                    // Add the complete message
+                    // Add the complete message with optional image
                     const aiMessage: Message = {
                       id: aiMessageId,
                       conversationId: `conv-${companionId}`,
                       sender: "ai",
                       content: fullResponse,
+                      imageUrl: data.imageUrl || undefined,
                       createdAt: new Date().toISOString(),
                     };
                     addMessage(companionId, aiMessage);
@@ -283,7 +284,7 @@ export default function ChatPage() {
   ];
 
   return (
-    <div className={`flex h-screen bg-gradient-to-b ${moodBg[currentMood]} bg-background`}>
+    <div className={`flex h-[100dvh] min-h-screen bg-gradient-to-b ${moodBg[currentMood]} bg-background`}>
       {/* Conversations Sidebar - Desktop Only */}
       <AnimatePresence>
         {showConversations && (

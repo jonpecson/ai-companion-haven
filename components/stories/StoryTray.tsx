@@ -41,6 +41,7 @@ export function StoryTray({ stories, companions, onStoryClick }: StoryTrayProps)
                 src={companion.avatar}
                 alt={companion.name}
                 fill
+                loading="lazy"
                 className="object-cover rounded-full"
                 sizes="64px"
               />
