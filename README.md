@@ -438,18 +438,53 @@ Before building this application, I researched several AI companion platforms:
    - Personality-based AI interactions
    - Mood-aware conversations
 
-2. **Character.AI** - Studied their conversation flow and character creation
+2. **Candy AI** (candy.ai) - Multimodal interaction platform
+   - Chat, voice conversations, and image generation in one platform
+   - Extensive character builder with ethnicity, age, physical features, personality traits
+   - 100+ pre-built characters with unique backstories
+   - Adaptive learning - AI adjusts tone and emotional intelligence over time
+   - Token-based credit system for premium features
+
+3. **Nomi AI** (nomi.ai) - Memory-focused companion platform
+   - Short, medium, and long-term memory systems
+   - Voice calls with emotional tone variation
+   - AI-generated contextual selfies
+   - Group conversations where multiple AI companions interact
+   - "Unfiltered" positioning with privacy emphasis
+
+4. **OurDream AI** (ourdream.ai) - Content generation focused
+   - Dark theme with pink accents (similar to our design)
+   - 7 million user-created characters
+   - Image and video generation of companions
+   - "Dreamcoins" currency for content generation
+   - Grid-based character discovery with filtering
+
+5. **Romantic AI** (romanticai.com) - Customization-heavy approach
+   - Photo-realistic and anime style options
+   - Adjustable conversation styles (witty, encouraging, romantic)
+   - Real-time photo generation and sharing
+   - Emotional tone customization
+   - Cross-platform (web and mobile apps)
+
+6. **Character.AI** - Studied their conversation flow and character creation
    - Multi-turn conversation handling
    - Character personality persistence
 
-3. **Replika** - Analyzed their companion customization approach
+7. **Replika** - Analyzed their companion customization approach
    - Emotional connection features
    - Memory and relationship progression
 
-4. **Instagram Stories** - For the Stories UX implementation
+8. **Instagram Stories** - For the Stories UX implementation
    - Progress bar behavior
    - Tap-to-navigate interaction patterns
    - Auto-advance timing
+
+**Key Insights Applied:**
+- Dark theme with pink/rose accents (common across Candy, OurDream, Nectar)
+- Memory systems for relationship continuity (Nomi, Replika)
+- Personality trait sliders for customization (Candy, Romantic AI)
+- Stories feature for daily engagement (Nectar, Instagram)
+- Mood-based conversation adaptation (Nectar, Romantic AI)
 
 ### UI Design Decisions
 
