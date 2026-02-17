@@ -289,12 +289,12 @@ export default function ChatPage() {
         {showConversations && (
           <motion.aside
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 320, opacity: 1 }}
+            animate={{ width: 288, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="hidden lg:block border-r border-border overflow-hidden flex-shrink-0"
           >
-            <ConversationList className="w-80" />
+            <ConversationList className="w-72" />
           </motion.aside>
         )}
       </AnimatePresence>
@@ -430,12 +430,12 @@ export default function ChatPage() {
         {showInfo && (
           <motion.aside
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 320, opacity: 1 }}
+            animate={{ width: 280, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="hidden md:block border-l border-border glass overflow-hidden flex-shrink-0"
           >
-            <div className="w-80 h-full overflow-y-auto">
+            <div className="w-[280px] h-full overflow-y-auto">
               <div className="p-6">
                 {/* Avatar */}
                 <div className="relative aspect-square rounded-2xl overflow-hidden mb-4">

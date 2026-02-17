@@ -62,7 +62,7 @@ export default function ConversationsPage() {
         {/* Desktop View - Split layout */}
         <div className="hidden lg:flex flex-1 h-screen">
           {/* Conversations List */}
-          <div className="w-80 border-r border-border flex-shrink-0">
+          <div className="w-72 xl:w-80 border-r border-border flex-shrink-0">
             <ConversationList onSelectConversation={handleSelectConversation} />
           </div>
 

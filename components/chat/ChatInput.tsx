@@ -153,7 +153,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
 
               {/* Emoji Picker Popup */}
               {showEmojiPicker && (
-                <div className="absolute bottom-12 right-0 z-50">
+                <div className="absolute bottom-12 right-0 sm:right-0 -right-2 z-50">
                   <Picker
                     data={data}
                     onEmojiSelect={handleEmojiSelect}
@@ -161,7 +161,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
                     previewPosition="none"
                     skinTonePosition="none"
                     maxFrequentRows={2}
-                    perLine={8}
+                    perLine={7}
                   />
                 </div>
               )}

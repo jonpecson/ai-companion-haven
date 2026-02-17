@@ -348,7 +348,7 @@ export default function CreateCompanionPage() {
                       <h3 className="text-lg font-semibold text-foreground mb-4">
                         Choose Avatar
                       </h3>
-                      <div className="grid grid-cols-5 gap-3">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                         {avatarOptions.map((avatar) => (
                           <button
                             key={avatar.url}
@@ -604,7 +604,7 @@ export default function CreateCompanionPage() {
                         Communication Style
                       </h3>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {communicationStyles.map((style) => (
                           <button
                             key={style.id}

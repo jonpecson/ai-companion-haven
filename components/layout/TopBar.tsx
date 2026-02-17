@@ -47,7 +47,7 @@ export function TopBar() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search companions..."
-            className="h-10 w-64 rounded-full bg-secondary pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:ring-2 focus:ring-primary/50"
+            className="h-10 w-48 lg:w-64 rounded-full bg-secondary pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all focus:ring-2 focus:ring-primary/50"
           />
         </div>
 

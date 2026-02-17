@@ -410,7 +410,7 @@ function StoriesContent() {
       {/* Desktop View - Facebook Style */}
       <main className="hidden lg:flex flex-1 ml-16 h-screen">
         {/* Left Sidebar - Companion List */}
-        <div className="w-80 border-r border-border bg-background/50 flex flex-col">
+        <div className="w-72 xl:w-80 border-r border-border bg-background/50 flex flex-col">
           <div className="p-6 border-b border-border">
             <h1 className="text-xl font-bold text-foreground">Stories</h1>
             <p className="text-sm text-muted-foreground mt-1">
