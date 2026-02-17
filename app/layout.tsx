@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="min-h-screen bg-background antialiased">
         {/* Main Content */}
-        <main className="min-h-screen pb-20 lg:pb-0">
+        <main className="min-h-screen pb-24 lg:pb-0">
           {children}
         </main>
 

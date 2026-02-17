@@ -21,7 +21,7 @@ export function StoryTray({ stories, companions, onStoryClick }: StoryTrayProps)
     .filter((group) => group.stories.length > 0);
 
   return (
-    <div className="flex gap-4 overflow-x-auto no-scrollbar px-4 py-2">
+    <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-2 -mx-4 px-4">
       {storyGroups.map(({ companion, hasUnviewed }) => (
         <button
           key={companion.id}
@@ -36,7 +36,7 @@ export function StoryTray({ stories, companions, onStoryClick }: StoryTrayProps)
                 : "bg-muted"
             )}
           >
-            <div className="relative w-16 h-16 rounded-full overflow-hidden bg-background p-[2px]">
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-background p-[2px]">
               <Image
                 src={companion.avatar}
                 alt={companion.name}
@@ -49,7 +49,7 @@ export function StoryTray({ stories, companions, onStoryClick }: StoryTrayProps)
               <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-green-500 border-2 border-background" />
             )}
           </div>
-          <span className="text-[11px] text-muted-foreground truncate max-w-[64px]">
+          <span className="text-[10px] sm:text-[11px] text-muted-foreground truncate max-w-[56px] sm:max-w-[64px]">
             {companion.name}
           </span>
         </button>

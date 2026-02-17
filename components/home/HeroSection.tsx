@@ -5,10 +5,10 @@ import { Sparkles, ArrowRight } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-secondary p-6 md:p-8 lg:p-12">
+    <section className="relative overflow-hidden rounded-2xl bg-secondary p-4 sm:p-6 md:p-8 lg:p-12">
       {/* Ambient glow */}
-      <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/20 blur-[100px]" />
-      <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary/10 blur-[80px]" />
+      <div className="absolute right-0 top-0 h-40 w-40 sm:h-64 sm:w-64 rounded-full bg-primary/20 blur-[80px] sm:blur-[100px] translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute bottom-0 left-0 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-primary/10 blur-[60px] sm:blur-[80px] -translate-x-1/2 translate-y-1/2" />
 
       <div className="relative z-10 max-w-lg">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/15 px-4 py-1.5 text-xs font-medium text-primary">
