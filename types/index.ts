@@ -103,6 +103,31 @@ export interface MoodTheme {
   bgClass: string;
 }
 
+// User Preferences for Settings
+export interface UserPreferences {
+  // Profile
+  displayName: string;
+
+  // Appearance
+  theme: 'light' | 'dark';
+
+  // Notifications
+  notificationsEnabled: boolean;
+  messageNotifications: boolean;
+  storyNotifications: boolean;
+
+  // Privacy
+  showOnlineStatus: boolean;
+  showReadReceipts: boolean;
+
+  // Sound
+  soundEnabled: boolean;
+  volume: number;
+
+  // Language
+  language: string;
+}
+
 export interface ApiResponse<T> {
   data: T;
   message?: string;

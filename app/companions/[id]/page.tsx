@@ -7,7 +7,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, MessageCircle, Heart, Share2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, useIsFavorite } from "@/lib/store";
 import { companionsApi, storiesApi } from "@/lib/api";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
@@ -16,10 +16,11 @@ import type { Companion, Story } from "@/types";
 export default function CompanionDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { setCompanions, setStories } = useAppStore();
+  const { setCompanions, setStories, toggleFavorite, favorites } = useAppStore();
   const [companion, setCompanion] = useState<Companion | null>(null);
   const [companionStories, setCompanionStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
+  const isFavorite = companion ? favorites.includes(companion.id) : false;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -160,10 +161,19 @@ export default function CompanionDetailPage() {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => toast.success(`Added ${companion.name} to favorites!`)}
+                  onClick={() => {
+                    toggleFavorite(companion.id);
+                    toast.success(isFavorite ? `Removed ${companion.name} from favorites` : `Added ${companion.name} to favorites!`);
+                  }}
                   className="p-3 rounded-xl glass hover:bg-muted/80 transition-colors"
                 >
-                  <Heart size={22} className="text-foreground hover:text-red-500 transition-colors" />
+                  <Heart
+                    size={22}
+                    className={cn(
+                      "transition-colors",
+                      isFavorite ? "fill-red-500 text-red-500" : "text-foreground hover:text-red-500"
+                    )}
+                  />
                 </button>
                 <button
                   onClick={() => {
@@ -270,10 +280,19 @@ export default function CompanionDetailPage() {
           {/* Actions */}
           <div className="absolute top-4 right-4 z-10 flex gap-2">
             <button
-              onClick={() => toast.success(`Added ${companion.name} to favorites!`)}
+              onClick={() => {
+                toggleFavorite(companion.id);
+                toast.success(isFavorite ? `Removed ${companion.name} from favorites` : `Added ${companion.name} to favorites!`);
+              }}
               className="p-2 rounded-full glass"
             >
-              <Heart size={20} className="text-foreground hover:text-red-500 transition-colors" />
+              <Heart
+                size={20}
+                className={cn(
+                  "transition-colors",
+                  isFavorite ? "fill-red-500 text-red-500" : "text-foreground hover:text-red-500"
+                )}
+              />
             </button>
             <button
               onClick={() => {

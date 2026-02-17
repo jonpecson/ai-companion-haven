@@ -1,6 +1,20 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { User, Companion, Story, Message, Memory, MoodType, Conversation } from "@/types";
+import type { User, Companion, Story, Message, Memory, MoodType, Conversation, UserPreferences } from "@/types";
+
+// Default preferences
+const defaultPreferences: UserPreferences = {
+  displayName: "Guest User",
+  theme: "dark",
+  notificationsEnabled: true,
+  messageNotifications: true,
+  storyNotifications: true,
+  showOnlineStatus: true,
+  showReadReceipts: true,
+  soundEnabled: true,
+  volume: 80,
+  language: "en",
+};
 
 interface AppState {
   // User state
@@ -16,6 +30,10 @@ interface AppState {
   activeConversationId: string | null;
   memories: Memory[];
   currentMood: MoodType;
+
+  // Preferences & Favorites
+  preferences: UserPreferences;
+  favorites: string[];
 
   // Loading states
   isLoading: boolean;
@@ -38,6 +56,13 @@ interface AppState {
   setMood: (mood: MoodType) => void;
   setLoading: (loading: boolean) => void;
   clearAllData: () => void;
+
+  // Preferences actions
+  setPreferences: (preferences: Partial<UserPreferences>) => void;
+
+  // Favorites actions
+  toggleFavorite: (companionId: string) => void;
+  isFavorite: (companionId: string) => boolean;
 }
 
 export const useAppStore = create<AppState>()(
@@ -54,6 +79,8 @@ export const useAppStore = create<AppState>()(
       activeConversationId: null,
       memories: [],
       currentMood: "romantic",
+      preferences: defaultPreferences,
+      favorites: [],
       isLoading: false,
 
       // Actions
@@ -166,6 +193,22 @@ export const useAppStore = create<AppState>()(
           memories: [],
           activeConversationId: null,
         }),
+
+      // Preferences
+      setPreferences: (newPreferences) =>
+        set((state) => ({
+          preferences: { ...state.preferences, ...newPreferences },
+        })),
+
+      // Favorites
+      toggleFavorite: (companionId) =>
+        set((state) => ({
+          favorites: state.favorites.includes(companionId)
+            ? state.favorites.filter((id) => id !== companionId)
+            : [...state.favorites, companionId],
+        })),
+
+      isFavorite: (companionId) => get().favorites.includes(companionId),
     }),
     {
       name: "nectar-ai-storage",
@@ -176,6 +219,8 @@ export const useAppStore = create<AppState>()(
         memories: state.memories,
         currentMood: state.currentMood,
         token: state.token,
+        preferences: state.preferences,
+        favorites: state.favorites,
       }),
     }
   )
@@ -197,3 +242,12 @@ export const useCompanion = (id: string) =>
 
 export const useConversations = () => useAppStore((state) => state.conversations);
 export const useActiveConversationId = () => useAppStore((state) => state.activeConversationId);
+
+// Preferences selectors
+export const usePreferences = () => useAppStore((state) => state.preferences);
+export const useTheme = () => useAppStore((state) => state.preferences.theme);
+
+// Favorites selectors
+export const useFavorites = () => useAppStore((state) => state.favorites);
+export const useIsFavorite = (companionId: string) =>
+  useAppStore((state) => state.favorites.includes(companionId));

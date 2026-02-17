@@ -14,7 +14,7 @@ import { StreamingMessage } from "@/components/chat/StreamingMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
-import { generateId, getSessionId } from "@/lib/utils";
+import { generateId, getSessionId, cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import type { Message, MoodType, Companion } from "@/types";
 
@@ -29,7 +29,7 @@ const moodBg: Record<MoodType, string> = {
 export default function ChatPage() {
   const params = useParams();
   const router = useRouter();
-  const { messages, setMessages, addMessage, addConversation, addMemory } = useAppStore();
+  const { messages, setMessages, addMessage, addConversation, addMemory, toggleFavorite, favorites } = useAppStore();
   const currentMood = useMood();
   const [isTyping, setIsTyping] = useState(false);
   const [companion, setCompanion] = useState<Companion | null>(null);
@@ -455,10 +455,20 @@ export default function ChatPage() {
                     <p className="text-sm text-muted-foreground">{companion.age} years old</p>
                   </div>
                   <button
-                    onClick={() => toast.success(`Added ${companion.name} to favorites!`)}
+                    onClick={() => {
+                      toggleFavorite(companion.id);
+                      const isFav = favorites.includes(companion.id);
+                      toast.success(isFav ? `Removed ${companion.name} from favorites` : `Added ${companion.name} to favorites!`);
+                    }}
                     className="p-2 rounded-full glass hover:bg-muted/50 transition-colors"
                   >
-                    <Heart size={20} className="text-muted-foreground hover:text-red-500 transition-colors" />
+                    <Heart
+                      size={20}
+                      className={cn(
+                        "transition-colors",
+                        favorites.includes(companion.id) ? "fill-red-500 text-red-500" : "text-muted-foreground hover:text-red-500"
+                      )}
+                    />
                   </button>
                 </div>
 
